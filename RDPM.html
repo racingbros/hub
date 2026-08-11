@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDPM — RACINGBROS DOWNLOAD PAGE MANAGER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;
+  --panel:#111;
+  --panel2:#161616;
+  --line:#262626;
+  --line2:#333;
+  --ink:#e8e8e8;
+  --dim:#777;
+  --dimmer:#4a4a4a;
+  --red:#CC282E;
+  --redink:#ff5a5f;
+  --ok:#3a3a3a;
+  --mono:'JetBrains Mono',monospace;
+  --cond:'Barlow Condensed',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--mono);
+  font-size:12px;
+  line-height:1.4;
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font-family:inherit}
+::selection{background:var(--red);color:#fff}
+
+/* ===== APP SHELL ===== */
+.app{max-width:1100px;margin:0 auto;min-height:100%;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+
+/* ===== MASTHEAD ===== */
+.mast{
+  display:flex;align-items:stretch;
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+.mast-id{
+  padding:18px 20px;border-right:1px solid var(--line);
+  display:flex;flex-direction:column;justify-content:center;min-width:180px;
+}
+.mast-id .logo{
+  font-family:var(--cond);font-weight:700;letter-spacing:2px;
+  font-size:30px;line-height:.9;text-transform:uppercase;
+}
+.mast-id .logo b{color:var(--red)}
+.mast-id .sub{
+  font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-top:4px;
+}
+.mast-actions{display:flex;flex:1;flex-wrap:wrap}
+.act{
+  flex:1;min-width:120px;
+  background:var(--panel);border:none;border-right:1px solid var(--line);
+  color:var(--ink);cursor:pointer;
+  font-family:var(--cond);font-weight:600;font-size:14px;letter-spacing:2px;text-transform:uppercase;
+  padding:0 18px;transition:.12s;
+  display:flex;align-items:center;gap:10px;justify-content:flex-start;
+}
+.act:last-child{border-right:none}
+.act:hover{background:var(--panel2);color:#fff}
+.act .k{color:var(--dim);font-family:var(--mono);font-size:11px}
+.act.primary:hover{background:var(--red);color:#fff}
+.act.primary:hover .k{color:#fff}
+.act.danger:hover{background:#2a0d0e;color:var(--redink)}
+
+/* ===== STATUS STRIP ===== */
+.strip{
+  display:flex;gap:0;border-bottom:1px solid var(--line);background:var(--panel2);
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);
+}
+.stat{padding:9px 18px;border-right:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.stat b{color:var(--ink);font-weight:500}
+.stat.warn b{color:var(--redink)}
+.stat .lang-pill{
+  display:inline-flex;border:1px solid var(--line2);
+}
+.stat .lang-pill span{padding:1px 7px;color:var(--dim);cursor:default}
+.stat .lang-pill span.on{background:var(--ink);color:#000;font-weight:700}
+
+/* ===== BOARD ===== */
+.board{padding:16px}
+.cat{
+  border:1px solid var(--line);margin-bottom:14px;background:var(--panel);
+}
+.cat.dragover-cat{border-color:var(--red)}
+.cat-head{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 12px;border-bottom:1px solid var(--line);background:var(--panel2);
+  user-select:none;
+}
+.grip{
+  cursor:grab;color:var(--dimmer);font-size:13px;letter-spacing:-2px;
+  padding:2px 4px;line-height:1;
+}
+.grip:active{cursor:grabbing}
+.cat-label{
+  font-family:var(--cond);font-weight:700;font-size:18px;letter-spacing:1.5px;
+  text-transform:uppercase;flex:1;line-height:1;cursor:text;
+}
+.cat-label.editing{outline:1px solid var(--red);outline-offset:2px}
+.cat-count{color:var(--dim);font-size:10px;letter-spacing:1px;border:1px solid var(--line2);padding:2px 7px}
+.cat-btns{display:flex;gap:6px}
+.mini{
+  background:transparent;border:1px solid var(--line2);color:var(--dim);
+  cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:1px;
+  padding:4px 9px;text-transform:uppercase;transition:.12s;
+}
+.mini:hover{border-color:var(--ink);color:var(--ink)}
+.mini.add:hover{border-color:var(--red);color:var(--redink)}
+.mini.del:hover{border-color:var(--red);color:var(--redink)}
+.cat.collapsed .cat-body{display:none}
+.chev{color:var(--dim);font-size:11px;width:14px;text-align:center;cursor:pointer}
+
+.cat-body{min-height:8px}
+.empty-drop{
+  padding:14px;text-align:center;color:var(--dimmer);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+}
+
+/* ===== ITEM ROW ===== */
+.row{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-bottom:1px solid var(--line);
+  background:var(--panel);transition:background .1s;
+}
+.row:last-child{border-bottom:none}
+.row:hover{background:var(--panel2)}
+.row.dragging{opacity:.35}
+.row.drop-before{box-shadow:inset 0 2px 0 var(--red)}
+.row.drop-after{box-shadow:inset 0 -2px 0 var(--red)}
+.row-name{
+  flex:1;font-size:12px;letter-spacing:.5px;text-transform:uppercase;cursor:text;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row.dead .row-name{color:var(--dim)}
+.row-name input{
+  width:100%;background:#000;border:1px solid var(--red);color:#fff;
+  font-family:var(--mono);font-size:12px;letter-spacing:.5px;text-transform:uppercase;padding:3px 6px;outline:none;
+}
+.badges{display:flex;gap:5px}
+.badge{
+  font-size:9px;letter-spacing:1px;padding:2px 6px;border:1px solid var(--line2);
+  color:var(--dimmer);text-transform:uppercase;min-width:30px;text-align:center;
+}
+.badge.on{background:var(--red);border-color:var(--red);color:#fff}
+.badge.dead{border-color:var(--red);color:var(--redink)}
+.row-btns{display:flex;gap:6px}
+
+/* ===== ADD CATEGORY ===== */
+.add-cat{
+  width:100%;background:transparent;border:1px dashed var(--line2);color:var(--dim);
+  cursor:pointer;font-family:var(--cond);font-weight:600;font-size:15px;letter-spacing:3px;
+  text-transform:uppercase;padding:14px;transition:.12s;
+}
+.add-cat:hover{border-color:var(--red);color:var(--redink)}
+
+/* ===== MODAL ===== */
+.scrim{
+  position:fixed;inset:0;background:rgba(0,0,0,.78);
+  display:none;align-items:flex-start;justify-content:center;z-index:50;padding:60px 16px;
+}
+.scrim.open{display:flex}
+.modal{
+  width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line2);
+}
+.modal-head{
+  padding:14px 16px;border-bottom:1px solid var(--line);
+  font-family:var(--cond);font-weight:700;font-size:18px;letter-spacing:2px;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.modal-head .x{cursor:pointer;color:var(--dim);font-size:16px}
+.modal-head .x:hover{color:var(--redink)}
+.modal-body{padding:16px}
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:9px;letter-spacing:2px;color:var(--dim);
+  text-transform:uppercase;margin-bottom:6px;
+}
+.field label .opt{color:var(--dimmer)}
+.field input{
+  width:100%;background:#000;border:1px solid var(--line2);color:var(--ink);
+  font-family:var(--mono);font-size:12px;padding:9px 10px;outline:none;transition:.12s;
+}
+.field input:focus{border-color:var(--red)}
+.field input::placeholder{color:var(--dimmer);text-transform:none}
+.field .hint{font-size:9px;color:var(--dimmer);margin-top:5px;letter-spacing:.5px}
+.modal-warn{
+  font-size:10px;color:var(--redink);letter-spacing:1px;text-transform:uppercase;
+  border:1px solid var(--red);background:#1a0809;padding:8px 10px;margin-bottom:14px;display:none;
+}
+.modal-warn.show{display:block}
+.modal-foot{
+  display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line);justify-content:flex-end;
+}
+.btn{
+  background:transparent;border:1px solid var(--line2);color:var(--ink);cursor:pointer;
+  font-family:var(--cond);font-weight:600;font-size:14px;letter-spacing:2px;text-transform:uppercase;
+  padding:9px 22px;transition:.12s;
+}
+.btn:hover{border-color:var(--ink)}
+.btn.go{background:var(--red);border-color:var(--red);color:#fff}
+.btn.go:hover{background:#a81f24;border-color:#a81f24}
+
+/* ===== PREVIEW MODAL ===== */
+.modal.wide{max-width:1000px}
+.pv-frame{width:100%;height:70vh;border:1px solid var(--line2);background:#fff}
+.pv-note{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--red);color:#fff;padding:11px 22px;z-index:99;
+  font-family:var(--cond);font-weight:600;letter-spacing:2px;text-transform:uppercase;font-size:14px;
+  transition:transform .22s;border:1px solid #fff2;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media (max-width:680px){
+  .mast{flex-direction:column}
+  .mast-id{border-right:none;border-bottom:1px solid var(--line)}
+  .act{min-width:50%;border-bottom:1px solid var(--line)}
+  .strip{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="mast">
+    <div class="mast-id">
+      <div class="logo">RDPM</div>
+      <div class="sub">Download Page Manager</div>
+    </div>
+    <div class="mast-actions">
+      <button class="act" onclick="document.getElementById('importFile').click()">Import<span class="k">menu.html</span></button>
+      <button class="act" onclick="openPreview()">Preview<span class="k">live</span></button>
+      <button class="act primary" onclick="exportMenu()">Export<span class="k">menu.html</span></button>
+      <button class="act danger" onclick="resetAll()">Reset<span class="k">default</span></button>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="stat">Categories <b id="s-cats">0</b></div>
+    <div class="stat">Items <b id="s-items">0</b></div>
+    <div class="stat warn">Dead <b id="s-dead">0</b></div>
+    <div class="stat warn">Dup URLs <b id="s-dup">0</b></div>
+    <div class="stat" style="margin-left:auto">Inspect
+      <span class="lang-pill"><span id="lp-en" class="on">EN</span><span id="lp-zh">繁</span></span>
+    </div>
+  </div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<input type="file" id="importFile" accept=".html,text/html" style="display:none" onchange="importMenu(event)">
+
+<!-- ITEM EDITOR -->
+<div class="scrim" id="editScrim">
+  <div class="modal">
+    <div class="modal-head"><span id="editTitle">Add item</span><span class="x" onclick="closeEdit()">✕</span></div>
+    <div class="modal-body">
+      <div class="modal-warn" id="editWarn">No links set — this item will be hidden in both languages (dead entry).</div>
+      <div class="field">
+        <label>Item name</label>
+        <input type="text" id="f-name" placeholder="e.g. SHICANE HD" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>English link <span class="opt">/ optional</span></label>
+        <input type="text" id="f-en" placeholder="https://drive.google.com/file/d/.../view" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>繁體中文 link <span class="opt">/ optional</span></label>
+        <input type="text" id="f-zh" placeholder="https://drive.google.com/file/d/.../view" autocomplete="off">
+        <div class="hint">Paste the Google Drive share link as-is. Leave blank if no manual exists for that language.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeEdit()">Cancel</button>
+      <button class="btn go" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="scrim" id="pvScrim">
+  <div class="modal wide">
+    <div class="modal-head"><span>Live preview — exported menu.html</span><span class="x" onclick="closePreview()">✕</span></div>
+    <div class="modal-body">
+      <div class="pv-note">Rendered on white — the real file ships with a transparent body for embedding.</div>
+      <iframe id="pvFrame" class="pv-frame"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   RDPM — RACINGBROS DOWNLOAD PAGE MANAGER
+   Single-file. Edits the menu data, exports a faithful menu.html.
+   ============================================================ */
+
+const STORE_KEY = 'rdpm_state_v2';
+const LEGACY_LABELS = {
+  REAR:'USER MANUAL - REAR', FRONT:'USER MANUAL - FRONT',
+  OTHERS:'OTHERS', BROCHURE:'BROCHURE'
+};
+
+let uid = 1;
+const nid = () => 'x' + (uid++);
+
+/* ---- default data (current live menu) ---- */
+function defaultState(){
+  const DEFAULT = [
+    {
+      "label": "USER MANUAL - REAR",
+      "items": [
+        {
+          "name": "AIR CANNON HD",
+          "en": "https://drive.google.com/file/d/1b7vwTeFm-snziTuGfq7N00DYnhcbmUCe/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "BAZOOKA 1.0 ~ 4.0",
+          "en": "https://drive.google.com/file/d/1PapsKq0sNzpacPkZGQ6tdfAZfRLODErJ/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1lSKYGrCHfoDjEMn6mgeRMx09COeIep5Y/view?usp=drive_link"
+        },
+        {
+          "name": "BAZOOKA 5.0",
+          "en": "https://drive.google.com/file/d/1mgvsRV9fHcLY66tc4qNSxtN-cCM77fkw/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1K_sTbNNt4b7zrDbyxTNJlC5Ga97O-hiq/view?usp=drive_link"
+        },
+        {
+          "name": "BAZOOKA VESPA",
+          "en": "https://drive.google.com/file/d/1rMI9w9080sTVNT7Z25z9G7Vpmaz7dMtp/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1L1CMZORXylupNZAwZYLuQ8IlUyvQcV2h/view?usp=drive_link"
+        },
+        {
+          "name": "SHICANE HD",
+          "en": "https://drive.google.com/file/d/1LGCVCuiukp0GMSiiFNWjfNpS9wP45xhs/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1yT3yPeLI041_wTfIceVPxXCeHEdosHB6/view?usp=drive_link"
+        },
+        {
+          "name": "SHICANE HLR SOFTAIL",
+          "en": "https://drive.google.com/file/d/1majStGSkABwRHL9vBCNl2_TdgPODTkLQ/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1Xi2hKBzlI704FuJ80PKJnR72SEK8oJDN/view?usp=drive_link"
+        },
+        {
+          "name": "SHICANE HLR FOR SURRON ULTRA BEE",
+          "en": "https://drive.google.com/file/d/1_BcOA02OG2Amqc6pxTCoywHKuJHm7P2C/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "SHICANE HLR FOR SURRON ULTRA BEE ONLINE",
+          "en": "https://doc.racingbros.com/manuals/SHICANE_HLR_EMOTO_USER_MANUAL",
+          "zh": null
+        },
+        {
+          "name": "SHICANE COIL",
+          "en": "https://drive.google.com/file/d/1A9XPRxxDgUXiA0-nNQQA0FJOCYQF7t4u/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1u6pyaTmJw75EH7ET8P1QZZiZUTUEUdlu/view?usp=drive_link"
+        },
+        {
+          "name": "SHICANE EDGE",
+          "en": "https://drive.google.com/file/d/1Ey0fZ6rGDkrlXabb-wbD3gQ5BvrMemJP/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1FJARNxmWE14gNcK28rxaqyoMpOt3YhgL/view?usp=drive_link"
+        },
+        {
+          "name": "SHICANE TWIN",
+          "en": "https://drive.google.com/file/d/18mB6dWVbCzcu49R7gA7hExUB39z8yDpZ/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/17Rd6q34Y9mIsABekRG9ZEfZk_es26_zn/view?usp=drive_link"
+        },
+        {
+          "name": "SHICANE TWIN MONO-R CT125",
+          "en": "https://drive.google.com/file/d/1q4WjPdssiq0HagJac4f1g3_3GQ6JMM52/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1f3fxdPe5IU3I5qOT2izyr4SKR2luddwA/view?usp=drive_link"
+        }
+      ]
+    },
+    {
+      "label": "USER MANUAL - FRONT",
+      "items": [
+        {
+          "name": "AIR STRIKE",
+          "en": "https://drive.google.com/file/d/1MjNOuhqwFoz0wnECZBOR5bRAP42LiJvZ/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1jESPwiWgt9WNKtalRhRibCNOdT0_GFd8/view?usp=drive_link"
+        },
+        {
+          "name": "BISHOP31",
+          "en": "https://drive.google.com/file/d/1MjNOuhqwFoz0wnECZBOR5bRAP42LiJvZ/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1jESPwiWgt9WNKtalRhRibCNOdT0_GFd8/view?usp=drive_link"
+        },
+        {
+          "name": "BISHOP43 - LOW RIDER S/ST",
+          "en": "https://drive.google.com/file/d/1gzLXXRME9tYBz-zSOTfwRv5vXkn5OgiX/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "BISHOP43 - UNIVERSAL",
+          "en": "https://drive.google.com/file/d/1kQr3-rVFTlI7aCV49KFqOzsy_u8z_wbG/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "SCEPTER20",
+          "en": "https://drive.google.com/file/d/1FabNcrsbPVWcNq_VJZkcn6Kex82IdDjO/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "SCEPTER25 (YAMAHA YZF R3)",
+          "en": "https://drive.google.com/file/d/1om8mPge9b5KEzEQuB9s1OL4vTfNs97vl/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1ZBhhxGerZa2KHwPRRFCnzVwUd10Z1Q-r/view?usp=drive_link"
+        },
+        {
+          "name": "SCEPTER25 MANUAL (HARLEY-DAVIDSON)",
+          "en": "https://drive.google.com/file/d/1HvoogrJu5PG1LTGOyGw4kYaUq-tYls5M/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "FRONT FORK KIT HONDA MINIBIKES",
+          "en": "https://drive.google.com/file/d/1LKprgF6Es07dJcRhO9f6agz2Z9cGpzPG/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/16HcuM5cR8gvez-dDZn5kIkwWxQZI0rrK/view?usp=drive_link"
+        },
+        {
+          "name": "FRONT LOWERING FORK KIT HONDA MINIBIKES",
+          "en": "https://drive.google.com/file/d/1oLVFPYTQHedh2r0wQdjneT9IewNYc8vj/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1RWNysBTYSW7UPNC9ACBdJdBhHsfflaIc/view?usp=drive_link"
+        },
+        {
+          "name": "ANTI DIVE SYSTEM for CRF 110",
+          "en": "https://drive.google.com/file/d/1nujPseXmZjhiUIkC-flLm5lQ004Ab3zq/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "ANTI DIVE SYSTEM PN: R18F0025",
+          "en": "https://drive.google.com/file/d/1DoI4Ts_gD3iQBuoJSdeFYzt9QqTHn-Zr/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1v98yj9iY4Gn_E8jPLO4EVR_JiMTB9hMD/view?usp=drive_link"
+        },
+        {
+          "name": "MARKSMAN33",
+          "en": null,
+          "zh": "https://drive.google.com/file/d/17En1EeFtoz7jBct4e_BHs_dLtVSRAN5G/view?usp=drive_link"
+        },
+        {
+          "name": "SCOUT43",
+          "en": "https://drive.google.com/file/d/194kE6lrrjV2EjF60vAuZlbRdBb0IB7AB/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "SCOUT43 ONLINE",
+          "en": "https://doc.racingbros.com/manuals/SCOUT43_USER_MANUAL",
+          "zh": null
+        }
+      ]
+    },
+    {
+      "label": "OTHERS",
+      "items": [
+        {
+          "name": "HARLEY-DAVIDSON TOURING HLR BRACKET",
+          "en": "https://drive.google.com/file/d/1mYOm5pKxO7iFlx0He21fBFD7D7Nup62v/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "SNIPER",
+          "en": "https://drive.google.com/file/d/1kY1QxgXjj_LHdAEfdOI9YRUTHhctStn4/view?usp=drive_link",
+          "zh": "https://drive.google.com/file/d/1cadIp5LUZRrZ05qGdkXI-8TMN5wU6iB6/view?usp=drive_link"
+        }
+      ]
+    },
+    {
+      "label": "BROCHURE",
+      "items": [
+        {
+          "name": "METRIC BIKES",
+          "en": "https://drive.google.com/file/d/1yguruJY-tWWBg9KLcUQGl09Lgy4TCYjG/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "AIR STRIKE",
+          "en": "https://drive.google.com/file/d/168a4FfTwu72loFchGjtge3yY-Zo8EcH-/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "BISHOP31",
+          "en": "https://drive.google.com/file/d/168a4FfTwu72loFchGjtge3yY-Zo8EcH-/view?usp=drive_link",
+          "zh": null
+        },
+        {
+          "name": "BISHOP43",
+          "en": "https://drive.google.com/file/d/1EnEaHdqfY4GftjkZOpFseB7I-X75nFvC/view?usp=drive_link",
+          "zh": null
+        }
+      ]
+    },
+    {
+      "label": "MAINTENANCE LOG",
+      "items": [
+        {
+          "name": "MAINTENANCE LOG",
+          "en": "https://ms.racingbros.com/",
+          "zh": null
+        }
+      ]
+    }
+  ];
+  return DEFAULT.map(c=>({
+    id:nid(), label:c.label, open:true,
+    items:c.items.map(i=>({id:nid(),name:i.name,en:i.en||null,zh:i.zh||null}))
+  }));
+}
+let state = [];
+
+/* ---- persistence ---- */
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      if(Array.isArray(s) && s.length){
+        // refresh ids so they're unique this session
+        s.forEach(c=>{ c.id=nid(); if(c.open===undefined)c.open=true; c.items.forEach(i=>i.id=nid()); });
+        state = s; return;
+      }
+    }
+  }catch(e){}
+  state = defaultState();
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function el(tag, cls, html){
+  const e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(html!==undefined)e.innerHTML=html;
+  return e;
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML='';
+
+  state.forEach(cat=>{
+    const card = el('div','cat'+(cat.open?'':' collapsed'));
+    card.dataset.cid = cat.id;
+
+    /* header */
+    const head = el('div','cat-head');
+    const grip = el('span','grip','⠿'); grip.title='Drag to reorder category';
+    grip.draggable=true;
+    grip.addEventListener('dragstart',e=>catDragStart(e,cat.id));
+    grip.addEventListener('dragend',catDragEnd);
+
+    const chev = el('span','chev',cat.open?'▼':'▶');
+    chev.addEventListener('click',()=>{cat.open=!cat.open;save();render();});
+
+    const label = el('div','cat-label',esc(cat.label));
+    label.title='Double-click to rename';
+    label.addEventListener('dblclick',()=>renameCat(label,cat));
+
+    const count = el('span','cat-count',cat.items.length+' itm');
+
+    const btns = el('div','cat-btns');
+    const addB = el('button','mini add','+ Item'); addB.onclick=()=>openEdit(cat.id,null);
+    const delB = el('button','mini del','Delete'); delB.onclick=()=>deleteCat(cat);
+    btns.append(addB,delB);
+
+    head.append(grip,chev,label,count,btns);
+    card.appendChild(head);
+
+    /* body */
+    const body = el('div','cat-body');
+    body.dataset.cid = cat.id;
+    body.addEventListener('dragover',e=>itemDragOver(e,body));
+    body.addEventListener('drop',e=>itemDrop(e,cat.id));
+
+    if(cat.items.length===0){
+      body.appendChild(el('div','empty-drop','— empty — drop items here —'));
+    }else{
+      cat.items.forEach(item=>body.appendChild(rowEl(cat,item)));
+    }
+    card.appendChild(body);
+
+    // category drop target highlight
+    card.addEventListener('dragover',e=>{ if(dragKind==='cat'){e.preventDefault(); card.classList.add('dragover-cat');} });
+    card.addEventListener('dragleave',()=>card.classList.remove('dragover-cat'));
+    card.addEventListener('drop',e=>{ if(dragKind==='cat'){catDrop(e,cat.id); card.classList.remove('dragover-cat');} });
+
+    board.appendChild(card);
+  });
+
+  const addCat = el('button','add-cat','+ Add category');
+  addCat.onclick=addCategory;
+  board.appendChild(addCat);
+
+  updateStats();
+  save();
+}
+
+function rowEl(cat,item){
+  const dead = !item.en && !item.zh;
+  const row = el('div','row'+(dead?' dead':''));
+  row.dataset.cid=cat.id; row.dataset.iid=item.id;
+  row.draggable=true;
+  row.addEventListener('dragstart',e=>itemDragStart(e,cat.id,item.id,row));
+  row.addEventListener('dragend',()=>{row.classList.remove('dragging');clearDropMarks();});
+
+  const grip = el('span','grip','⠿');
+
+  const name = el('div','row-name',esc(item.name||'(unnamed)'));
+  name.title='Double-click to rename';
+  name.addEventListener('dblclick',()=>renameItem(name,item));
+
+  const badges = el('div','badges');
+  if(dead){
+    badges.appendChild(el('span','badge dead','DEAD'));
+  }else{
+    badges.appendChild(el('span','badge'+(item.en?' on':''),'EN'));
+    badges.appendChild(el('span','badge'+(item.zh?' on':''),'繁'));
+  }
+
+  const btns = el('div','row-btns');
+  const ed = el('button','mini','Edit'); ed.onclick=()=>openEdit(cat.id,item.id);
+  const rm = el('button','mini del','Del'); rm.onclick=()=>deleteItem(cat,item);
+  btns.append(ed,rm);
+
+  row.append(grip,name,badges,btns);
+  return row;
+}
+
+/* ---- inline rename ---- */
+function renameItem(span,item){
+  const inp=document.createElement('input');
+  inp.value=item.name||'';
+  span.innerHTML=''; span.appendChild(inp); inp.focus(); inp.select();
+  const commit=()=>{ item.name=inp.value.trim()||item.name; render(); };
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter')inp.blur(); if(e.key==='Escape'){inp.value=item.name;inp.blur();} });
+  inp.addEventListener('blur',commit);
+}
+function renameCat(div,cat){
+  div.classList.add('editing');
+  const inp=document.createElement('input');
+  Object.assign(inp.style,{width:'100%',background:'#000',border:'none',color:'#fff',
+    fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:'18px',letterSpacing:'1.5px',
+    textTransform:'uppercase',outline:'none'});
+  inp.value=cat.label;
+  div.innerHTML=''; div.appendChild(inp); inp.focus(); inp.select();
+  const commit=()=>{ cat.label=inp.value.trim()||cat.label; render(); };
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter')inp.blur(); if(e.key==='Escape'){inp.value=cat.label;inp.blur();} });
+  inp.addEventListener('blur',commit);
+}
+
+/* ============================================================
+   CRUD
+   ============================================================ */
+function findCat(id){return state.find(c=>c.id===id);}
+
+function addCategory(){
+  state.push({id:nid(),label:'NEW CATEGORY',open:true,items:[]});
+  render();
+  // immediately rename the new one
+  const last=document.querySelector('.cat:last-of-type .cat-label');
+  if(last) last.dispatchEvent(new MouseEvent('dblclick'));
+}
+function deleteCat(cat){
+  if(cat.items.length && !confirm('Delete category "'+cat.label+'" and its '+cat.items.length+' item(s)?')) return;
+  state = state.filter(c=>c!==cat); render(); toast('Category deleted');
+}
+function deleteItem(cat,item){
+  cat.items = cat.items.filter(i=>i!==item); render(); toast('Item deleted');
+}
+
+/* ---- item editor modal ---- */
+let editCtx = {cid:null,iid:null};
+function openEdit(cid,iid){
+  editCtx={cid,iid};
+  const cat=findCat(cid);
+  const item = iid ? cat.items.find(i=>i.id===iid) : null;
+  document.getElementById('editTitle').textContent = item ? 'Edit item' : 'Add item — '+cat.label;
+  document.getElementById('f-name').value = item?item.name||'':'';
+  document.getElementById('f-en').value   = item?item.en||'':'';
+  document.getElementById('f-zh').value   = item?item.zh||'':'';
+  checkWarn();
+  document.getElementById('editScrim').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),30);
+}
+function closeEdit(){document.getElementById('editScrim').classList.remove('open');}
+function checkWarn(){
+  const en=document.getElementById('f-en').value.trim();
+  const zh=document.getElementById('f-zh').value.trim();
+  document.getElementById('editWarn').classList.toggle('show', !en && !zh);
+}
+['f-en','f-zh'].forEach(id=>document.getElementById(id).addEventListener('input',checkWarn));
+document.getElementById('f-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-en').focus();});
+
+function saveEdit(){
+  const name=document.getElementById('f-name').value.trim();
+  const en=document.getElementById('f-en').value.trim()||null;
+  const zh=document.getElementById('f-zh').value.trim()||null;
+  if(!name){ document.getElementById('f-name').focus(); return; }
+  const cat=findCat(editCtx.cid);
+  if(editCtx.iid){
+    const item=cat.items.find(i=>i.id===editCtx.iid);
+    item.name=name; item.en=en; item.zh=zh;
+  }else{
+    cat.items.push({id:nid(),name,en,zh});
+  }
+  closeEdit(); render(); toast('Saved');
+}
+
+/* ============================================================
+   DRAG & DROP
+   ============================================================ */
+let dragKind=null;           // 'item' | 'cat'
+let dragItem={cid:null,iid:null};
+let dragCatId=null;
+
+function clearDropMarks(){
+  document.querySelectorAll('.row.drop-before,.row.drop-after')
+    .forEach(r=>r.classList.remove('drop-before','drop-after'));
+}
+
+/* items */
+function itemDragStart(e,cid,iid,row){
+  dragKind='item'; dragItem={cid,iid};
+  row.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',iid);
+}
+function itemDragOver(e,body){
+  if(dragKind!=='item')return;
+  e.preventDefault();
+  clearDropMarks();
+  const after=rowAfter(body,e.clientY);
+  if(after) after.classList.add('drop-before');
+  else{
+    const rows=body.querySelectorAll('.row');
+    if(rows.length) rows[rows.length-1].classList.add('drop-after');
+  }
+}
+function rowAfter(body,y){
+  const rows=[...body.querySelectorAll('.row:not(.dragging)')];
+  return rows.find(r=>{
+    const b=r.getBoundingClientRect();
+    return y < b.top + b.height/2;
+  });
+}
+function itemDrop(e,destCid){
+  if(dragKind!=='item')return;
+  e.preventDefault();
+  const body=document.querySelector('.cat-body[data-cid="'+destCid+'"]');
+  const after=rowAfter(body,e.clientY);
+  const srcCat=findCat(dragItem.cid);
+  const idx=srcCat.items.findIndex(i=>i.id===dragItem.iid);
+  if(idx<0)return;
+  const [moved]=srcCat.items.splice(idx,1);
+  const destCat=findCat(destCid);
+  let pos=destCat.items.length;
+  if(after){ pos=destCat.items.findIndex(i=>i.id===after.dataset.iid); if(pos<0)pos=destCat.items.length; }
+  destCat.items.splice(pos,0,moved);
+  dragKind=null; clearDropMarks(); render();
+}
+
+/* categories */
+function catDragStart(e,cid){
+  dragKind='cat'; dragCatId=cid;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',cid);
+}
+function catDragEnd(){dragKind=null;document.querySelectorAll('.dragover-cat').forEach(c=>c.classList.remove('dragover-cat'));}
+function catDrop(e,destCid){
+  if(dragKind!=='cat'||destCid===dragCatId)return;
+  e.preventDefault();
+  const from=state.findIndex(c=>c.id===dragCatId);
+  const to=state.findIndex(c=>c.id===destCid);
+  if(from<0||to<0)return;
+  const [moved]=state.splice(from,1);
+  state.splice(to,0,moved);
+  dragKind=null; render();
+}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function updateStats(){
+  let items=0,dead=0; const urls={};
+  state.forEach(c=>c.items.forEach(i=>{
+    items++;
+    if(!i.en&&!i.zh)dead++;
+    [i.en,i.zh].forEach(u=>{ if(u){urls[u]=(urls[u]||0)+1;} });
+  }));
+  const dup=Object.values(urls).filter(n=>n>1).length;
+  document.getElementById('s-cats').textContent=state.length;
+  document.getElementById('s-items').textContent=items;
+  document.getElementById('s-dead').textContent=dead;
+  document.getElementById('s-dup').textContent=dup;
+}
+
+/* ============================================================
+   IMPORT
+   ============================================================ */
+function importMenu(ev){
+  const file=ev.target.files[0];
+  ev.target.value='';
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const parsed=extractData(r.result);
+      state=normalize(parsed);
+      render(); toast('Imported '+file.name);
+    }catch(err){
+      alert('Could not read a menu data block from that file.\n\n'+err.message+'\n\nExpected a "const data = {...}" or "const data = [...]" declaration.');
+    }
+  };
+  r.readAsText(file);
+}
+function extractData(html){
+  const m = html.match(/const\s+data\s*=\s*([\s\S]*?);\s*let\s+currentLang/);
+  if(!m) throw new Error('No data declaration found.');
+  return JSON.parse(m[1].trim());
+}
+function normalize(parsed){
+  // Array form (RDPM export): [{label, items:[{name,en,zh}]}]
+  if(Array.isArray(parsed)){
+    return parsed.map(c=>({
+      id:nid(), label:c.label||'CATEGORY', open:true,
+      items:(c.items||[]).map(i=>({id:nid(),name:i.name||'',en:i.en||null,zh:i.zh||null}))
+    }));
+  }
+  // Object form (legacy menu.html): { KEY: [{name,en,zh}] }
+  return Object.entries(parsed).map(([key,items])=>({
+    id:nid(), label:LEGACY_LABELS[key]||key, open:true,
+    items:(items||[]).map(i=>({id:nid(),name:i.name||'',en:i.en||null,zh:i.zh||null}))
+  }));
+}
+
+/* ============================================================
+   EXPORT  — builds a faithful menu.html
+   ============================================================ */
+function exportData(){
+  return state.map(c=>({
+    label:c.label,
+    items:c.items.map(i=>({name:i.name,en:i.en||null,zh:i.zh||null}))
+  }));
+}
+
+function buildMenuHTML(){
+  const dataJSON = JSON.stringify(exportData(), null, 8)
+    .replace(/\n/g,'\n    '); // indent block under the script
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* BASE STYLES */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        body {
+            background-color: transparent;
+            color: #000;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            border: 1px solid #000;
+            background: #fff;
+        }
+
+        /* RESPONSIVENESS */
+        @media (min-width: 321px) { .container { max-width: 980px; } }
+        @media (max-width: 320px) { .container { max-width: 320px; } }
+
+        /* TOP BAR */
+        .top-bar {
+            display: flex;
+            border-bottom: 1px solid #000;
+            height: 45px;
+        }
+
+        #searchBar {
+            flex-grow: 1;
+            padding: 0 15px;
+            border: none;
+            outline: none;
+            border-right: 1px solid #000;
+        }
+
+        /* UPGRADED TOGGLE */
+        .toggle-wrapper {
+            display: flex;
+            width: 100px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .lang-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            font-weight: 700;
+        }
+
+        .lang-option.active {
+            background: #000;
+            color: #fff;
+        }
+
+        /* DROPDOWN MENU */
+        .menu-item { border-bottom: 1px solid #000; }
+        .menu-item:last-child { border-bottom: none; }
+
+        .menu-header {
+            padding: 15px;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+        }
+
+        .menu-content {
+            display: none;
+            background: #fff;
+            border-top: 1px solid #eee;
+        }
+
+        .menu-content.show { display: block; }
+
+        .sub-link {
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #000;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        .sub-link:hover {
+            color: #CC282E;
+            background: #fafafa;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <input type="text" id="searchBar" placeholder="SEARCH..." onkeyup="filterMenu()">
+        <div class="toggle-wrapper" onclick="toggleLang()">
+            <div id="btn-en" class="lang-option active">EN</div>
+            <div id="btn-zh" class="lang-option">繁</div>
+        </div>
+    </div>
+    <div id="menu-root"></div>
+</div>
+
+<script>
+    const data = ${dataJSON};
+
+    let currentLang = 'en';
+    const root = document.getElementById('menu-root');
+
+    function renderMenu() {
+        root.innerHTML = '';
+        data.forEach((cat, i) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'menu-item';
+
+            const head = document.createElement('div');
+            head.className = 'menu-header';
+            const label = document.createElement('span');
+            label.innerText = cat.label;
+            const plus = document.createElement('span');
+            plus.innerText = '+';
+            head.appendChild(label);
+            head.appendChild(plus);
+
+            const content = document.createElement('div');
+            content.className = 'menu-content';
+            content.id = 'content-' + i;
+
+            head.addEventListener('click', () => content.classList.toggle('show'));
+
+            wrap.appendChild(head);
+            wrap.appendChild(content);
+            root.appendChild(wrap);
+            populate(cat, content);
+        });
+    }
+
+    function populate(cat, div) {
+        div.innerHTML = '';
+        cat.items.forEach(item => {
+            const url = (currentLang === 'en') ? item.en : item.zh;
+            if (url) {
+                const a = document.createElement('a');
+                a.className = 'sub-link';
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.innerText = item.name;
+                div.appendChild(a);
+            }
+        });
+    }
+
+    function toggleLang() {
+        currentLang = (currentLang === 'en') ? 'zh' : 'en';
+        document.getElementById('btn-en').classList.toggle('active');
+        document.getElementById('btn-zh').classList.toggle('active');
+        renderMenu();
+    }
+
+    function filterMenu() {
+        const q = document.getElementById('searchBar').value.toUpperCase();
+        document.querySelectorAll('.sub-link').forEach(l => {
+            const match = l.innerText.toUpperCase().indexOf(q) > -1;
+            l.classList.toggle('hidden', !match);
+        });
+        document.querySelectorAll('.menu-content').forEach(c => {
+            const hasVisible = c.querySelectorAll('.sub-link:not(.hidden)').length > 0;
+            if (q !== "" && hasVisible) c.classList.add('show');
+            else if (q === "") c.classList.remove('show');
+        });
+    }
+
+    renderMenu();
+<\/script>
+
+</body>
+</html>`;
+}
+
+function exportMenu(){
+  const html=buildMenuHTML();
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='menu.html'; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+  toast('menu.html exported');
+}
+
+/* ---- preview ---- */
+function openPreview(){
+  document.getElementById('pvFrame').srcdoc=buildMenuHTML();
+  document.getElementById('pvScrim').classList.add('open');
+}
+function closePreview(){document.getElementById('pvScrim').classList.remove('open');}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+function resetAll(){
+  if(!confirm('Reset everything back to the current live menu? Unsaved edits are lost.'))return;
+  state=defaultState(); render(); toast('Reset to default');
+}
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800);
+}
+// close modals on scrim click / escape
+document.querySelectorAll('.scrim').forEach(s=>s.addEventListener('mousedown',e=>{if(e.target===s)s.classList.remove('open');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.scrim.open').forEach(s=>s.classList.remove('open'));});
+
+/* boot */
+load();
+render();
+</script>
+</body>
+</html>

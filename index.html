@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>RACINGBROS — TOOLKIT HUB</title>
+<style>
+/* ════════════════════════════════════════
+   TOKENS
+   ════════════════════════════════════════ */
+:root{
+  /* dark default — racing red */
+  --bg:#0a0a0a;
+  --surface:#141414;
+  --surface-2:#1c1c1c;
+  --border:#2a2a2a;
+  --border-strong:#3a3a3a;
+  --text:#f0f0f0;
+  --text-dim:#888;
+  --text-mute:#555;
+  --accent:#d7282f;
+  --accent-text:#ffffff;
+  --hover:#1f1f1f;
+
+  --font:'Bahnschrift','Bahnschrift SemiCondensed','DIN Alternate','DIN Condensed','Roboto Condensed','Barlow Condensed','Oswald','Arial Narrow',sans-serif;
+  --font-size:14px;
+  --tracking:0.08em;
+
+  --header-h:58px;
+  --tab-h:44px;
+  --devp-w:380px;
+}
+[data-theme="light"]{
+  --bg:#ffffff;
+  --surface:#f5f5f5;
+  --surface-2:#ebebeb;
+  --border:#d8d8d8;
+  --border-strong:#a8a8a8;
+  --text:#0a0a0a;
+  --text-dim:#666;
+  --text-mute:#999;
+  --accent-text:#ffffff;
+  --hover:#e8e8e8;
+}
+
+/* ════════════════════════════════════════
+   RESET — no rounded corners anywhere
+   ════════════════════════════════════════ */
+*,*::before,*::after{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  border-radius:0!important;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--font);
+  font-size:var(--font-size);
+  line-height:1.4;
+  color:var(--text);
+  background:var(--bg);
+  text-transform:uppercase;
+  letter-spacing:var(--tracking);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  transition:background .18s,color .18s;
+}
+button,input,select,textarea{
+  font-family:inherit;
+  font-size:inherit;
+  color:inherit;
+  background:none;
+  border:none;
+  outline:none;
+  text-transform:inherit;
+  letter-spacing:inherit;
+}
+button{cursor:pointer}
+input[type=text]{text-transform:uppercase}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-strong)}
+::-webkit-scrollbar-thumb:hover{background:var(--text-mute)}
+
+/* ════════════════════════════════════════
+   APP SHELL
+   ════════════════════════════════════════ */
+#app{
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  height:100dvh;
+  width:100vw;
+  overflow:hidden;
+}
+
+/* ════════════════════════════════════════
+   HEADER
+   ════════════════════════════════════════ */
+#header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:var(--header-h);
+  padding:0 18px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  position:relative;
+  z-index:10;
+  gap:12px;
+}
+#logo{
+  display:flex;
+  align-items:center;
+  height:40px;
+  color:var(--text);
+  text-decoration:none;
+  flex-shrink:0;
+}
+#logo svg{
+  height:36px;
+  width:auto;
+  display:block;
+}
+#header-title{
+  flex:1;
+  text-align:center;
+  font-size:calc(var(--font-size) * .82);
+  font-weight:600;
+  letter-spacing:.32em;
+  color:var(--text-dim);
+  pointer-events:none;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#header-title .red{color:var(--accent)}
+#hamburger{
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border-strong);
+  background:transparent;
+  color:var(--text);
+  transition:background .12s,border-color .12s,color .12s;
+  flex-shrink:0;
+}
+#hamburger:hover{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--accent-text);
+}
+#hamburger svg{width:18px;height:18px}
+
+/* ════════════════════════════════════════
+   TAB BAR
+   ════════════════════════════════════════ */
+#tab-bar{
+  display:flex;
+  align-items:stretch;
+  height:var(--tab-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;
+  overflow-y:hidden;
+  flex-shrink:0;
+  scrollbar-width:thin;
+}
+#tab-bar::-webkit-scrollbar{height:3px}
+.tab{
+  display:flex;
+  align-items:center;
+  padding:0 22px;
+  font-size:calc(var(--font-size) * .9);
+  font-weight:600;
+  letter-spacing:.14em;
+  color:var(--text-dim);
+  background:transparent;
+  border-right:1px solid var(--border);
+  border-bottom:3px solid transparent;
+  white-space:nowrap;
+  transition:color .12s,background .12s,border-color .12s;
+  flex-shrink:0;
+}
+.tab:hover{
+  color:var(--text);
+  background:var(--hover);
+}
+.tab.active{
+  color:var(--text);
+  background:var(--bg);
+  border-bottom-color:var(--accent);
+}
+.tab .tab-num{
+  color:var(--accent);
+  margin-right:10px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ════════════════════════════════════════
+   PANELS
+   ════════════════════════════════════════ */
+#panels{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+  background:var(--bg);
+  min-height:0;
+}
+.panel{
+  display:none;
+  position:absolute;
+  inset:0;
+  overflow:auto;
+}
+.panel.active{display:block}
+.panel iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  display:block;
+  background:#fff;
+}
+
+/* ════════════════════════════════════════
+   MENU TAB (TAB 01)
+   ════════════════════════════════════════ */
+#menu-panel{
+  padding:48px 36px;
+}
+#menu-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  font-size:calc(var(--font-size) * .82);
+  color:var(--accent);
+  letter-spacing:.32em;
+  font-weight:700;
+  margin-bottom:14px;
+}
+#menu-eyebrow::before{
+  content:"";
+  display:inline-block;
+  width:28px;
+  height:2px;
+  background:var(--accent);
+}
+#menu-heading{
+  font-size:calc(var(--font-size) * 2.6);
+  font-weight:700;
+  letter-spacing:.04em;
+  margin-bottom:6px;
+  color:var(--text);
+  line-height:1.05;
+}
+#menu-sub{
+  font-size:calc(var(--font-size) * .92);
+  color:var(--text-dim);
+  margin-bottom:42px;
+  letter-spacing:.2em;
+}
+#menu-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:14px;
+  max-width:1500px;
+}
+.menu-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:34px 30px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:4px solid var(--border-strong);
+  text-align:left;
+  color:var(--text);
+  transition:border-color .15s,background .15s,transform .15s,padding .15s;
+  min-height:124px;
+  position:relative;
+  overflow:hidden;
+  font-family:inherit;
+}
+.menu-card::after{
+  content:"";
+  position:absolute;
+  top:0;right:0;
+  width:0;
+  height:100%;
+  background:var(--accent);
+  transition:width .25s ease-out;
+  z-index:0;
+}
+.menu-card:hover{
+  border-left-color:var(--accent);
+  background:var(--surface-2);
+}
+.menu-card:hover::after{width:4px}
+.menu-card-text{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:relative;
+  z-index:1;
+  min-width:0;
+}
+.menu-card-num{
+  font-size:calc(var(--font-size) * .8);
+  color:var(--accent);
+  font-weight:700;
+  letter-spacing:.28em;
+}
+.menu-card-name{
+  font-size:calc(var(--font-size) * 1.95);
+  font-weight:700;
+  letter-spacing:.06em;
+  line-height:1.1;
+  word-break:break-word;
+}
+.menu-card-arrow{
+  font-size:calc(var(--font-size) * 2);
+  color:var(--text-mute);
+  transition:color .18s,transform .18s;
+  position:relative;
+  z-index:1;
+  margin-left:14px;
+  flex-shrink:0;
+}
+.menu-card:hover .menu-card-arrow{
+  color:var(--accent);
+  transform:translateX(6px);
+}
+#menu-footer{
+  margin-top:48px;
+  padding-top:24px;
+  border-top:1px solid var(--border);
+  font-size:calc(var(--font-size) * .76);
+  color:var(--text-mute);
+  letter-spacing:.2em;
+}
+
+/* ════════════════════════════════════════
+   DEV PANEL
+   ════════════════════════════════════════ */
+#devp-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s;
+  z-index:99;
+}
+#devp-overlay.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#devp{
+  position:fixed;
+  top:0;
+  right:0;
+  height:100vh;
+  height:100dvh;
+  width:var(--devp-w);
+  max-width:100vw;
+  background:var(--bg);
+  border-left:1px solid var(--border);
+  transform:translateX(100%);
+  transition:transform .25s ease-out;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  box-shadow:-10px 0 40px rgba(0,0,0,.55);
+}
+#devp.open{transform:translateX(0)}
+
+#devp-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:var(--header-h);
+  padding:0 18px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+#devp-title{
+  font-size:calc(var(--font-size) * 1);
+  font-weight:700;
+  letter-spacing:.26em;
+  color:var(--text);
+}
+#devp-title::before{
+  content:"▌";
+  color:var(--accent);
+  margin-right:8px;
+}
+#devp-close{
+  width:32px;
+  height:32px;
+  color:var(--text);
+  font-size:16px;
+  background:transparent;
+  border:1px solid var(--border-strong);
+  transition:all .12s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#devp-close:hover{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--accent-text);
+}
+
+#devp-tabs{
+  display:flex;
+  flex-shrink:0;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.devp-tab{
+  flex:1;
+  padding:14px 6px;
+  font-size:calc(var(--font-size) * .8);
+  font-weight:700;
+  letter-spacing:.18em;
+  color:var(--text-dim);
+  border-bottom:2px solid transparent;
+  background:transparent;
+  transition:all .12s;
+}
+.devp-tab:hover{color:var(--text)}
+.devp-tab.active{
+  color:var(--text);
+  border-bottom-color:var(--accent);
+  background:var(--bg);
+}
+
+#devp-body{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  min-height:0;
+}
+#devp-body::-webkit-scrollbar{width:5px}
+
+.devp-section{
+  display:none;
+  padding:22px 18px 18px;
+}
+.devp-section.active{display:block}
+
+.devp-group{margin-bottom:28px}
+.devp-group:last-child{margin-bottom:14px}
+
+.devp-label{
+  font-size:calc(var(--font-size) * .76);
+  color:var(--text-dim);
+  letter-spacing:.22em;
+  margin-bottom:12px;
+  font-weight:700;
+}
+.devp-label::before{
+  content:"▌";
+  color:var(--accent);
+  margin-right:6px;
+}
+
+/* TOOLS LIST */
+#tools-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:14px;
+}
+.tool-item{
+  display:flex;
+  align-items:stretch;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--border-strong);
+  transition:border-color .12s,background .12s,opacity .12s;
+  min-height:54px;
+}
+.tool-item:hover{border-left-color:var(--accent)}
+.tool-item.dragging{opacity:.35}
+.tool-item.drag-over{
+  border-color:var(--accent);
+  border-left-color:var(--accent);
+}
+.tool-handle{
+  width:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text-mute);
+  cursor:grab;
+  border-right:1px solid var(--border);
+  flex-shrink:0;
+  user-select:none;
+  font-size:13px;
+}
+.tool-handle:active{cursor:grabbing}
+.tool-handle:hover{color:var(--accent)}
+.tool-info{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:7px 10px;
+  min-width:0;
+  overflow:hidden;
+}
+.tool-name-input{
+  background:transparent;
+  color:var(--text);
+  font-size:calc(var(--font-size) * .92);
+  font-weight:600;
+  letter-spacing:.08em;
+  width:100%;
+  padding:2px 0;
+  border-bottom:1px dashed transparent;
+}
+.tool-name-input:focus{border-bottom-color:var(--accent)}
+.tool-meta{
+  font-size:calc(var(--font-size) * .68);
+  color:var(--text-mute);
+  letter-spacing:.16em;
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight:600;
+}
+.tool-meta.upload{color:var(--accent)}
+.tool-actions{
+  display:flex;
+  border-left:1px solid var(--border);
+  flex-shrink:0;
+}
+.tool-btn{
+  width:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text-dim);
+  background:transparent;
+  border-left:1px solid var(--border);
+  transition:all .1s;
+}
+.tool-btn:first-child{border-left:0}
+.tool-btn:hover{
+  background:var(--accent);
+  color:var(--accent-text);
+}
+.tool-btn svg{width:14px;height:14px}
+
+/* BUTTONS */
+.btn-primary{
+  width:100%;
+  padding:13px;
+  background:var(--accent);
+  color:var(--accent-text);
+  font-size:calc(var(--font-size) * .88);
+  font-weight:700;
+  letter-spacing:.22em;
+  border:1px solid var(--accent);
+  transition:opacity .12s;
+}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{
+  width:100%;
+  padding:11px;
+  background:transparent;
+  color:var(--text);
+  font-size:calc(var(--font-size) * .82);
+  font-weight:700;
+  letter-spacing:.2em;
+  border:1px solid var(--border-strong);
+  transition:all .12s;
+}
+.btn-secondary:hover{
+  background:var(--text);
+  color:var(--bg);
+  border-color:var(--text);
+}
+
+.empty-tools{
+  padding:30px 16px;
+  text-align:center;
+  color:var(--text-mute);
+  font-size:calc(var(--font-size) * .82);
+  border:1px dashed var(--border-strong);
+  letter-spacing:.14em;
+}
+
+.tip-text{
+  font-size:calc(var(--font-size) * .76);
+  color:var(--text-dim);
+  line-height:1.85;
+  letter-spacing:.1em;
+  font-weight:500;
+}
+.tip-text span{color:var(--accent);font-weight:700}
+
+/* THEME PRESETS */
+#scheme-presets{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+.scheme-preset{
+  padding:12px 11px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  text-align:left;
+  transition:border-color .12s,background .12s;
+}
+.scheme-preset:hover{border-color:var(--border-strong)}
+.scheme-preset.active{
+  border-color:var(--accent);
+  background:var(--surface-2);
+}
+.scheme-name{
+  font-size:calc(var(--font-size) * .76);
+  font-weight:700;
+  letter-spacing:.16em;
+  margin-bottom:9px;
+  color:var(--text);
+}
+.scheme-swatches{display:flex;gap:3px}
+.swatch{
+  width:18px;
+  height:18px;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+/* MODE TOGGLE */
+#theme-toggle{
+  display:flex;
+  width:100%;
+  border:1px solid var(--border-strong);
+}
+.theme-opt{
+  flex:1;
+  padding:11px;
+  font-size:calc(var(--font-size) * .82);
+  font-weight:700;
+  letter-spacing:.22em;
+  color:var(--text-dim);
+  background:transparent;
+  transition:all .12s;
+}
+.theme-opt+.theme-opt{border-left:1px solid var(--border-strong)}
+.theme-opt.active{
+  background:var(--text);
+  color:var(--bg);
+}
+
+/* COLOR PICKERS */
+.color-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid var(--border);
+}
+.color-row:last-child{border-bottom:0}
+.color-row-label{
+  font-size:calc(var(--font-size) * .82);
+  color:var(--text);
+  letter-spacing:.12em;
+  font-weight:600;
+}
+.color-controls{display:flex;align-items:center;gap:10px}
+.color-swatch{
+  width:30px;
+  height:30px;
+  border:1px solid var(--border-strong);
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+}
+.color-swatch input{
+  position:absolute;
+  inset:-5px;
+  width:calc(100% + 10px);
+  height:calc(100% + 10px);
+  opacity:0;
+  cursor:pointer;
+  border:0;
+  padding:0;
+}
+.color-hex{
+  font-size:calc(var(--font-size) * .76);
+  color:var(--text-dim);
+  font-family:'Consolas','Courier New',monospace;
+  letter-spacing:.04em;
+  width:74px;
+  text-transform:uppercase;
+}
+
+/* SLIDER */
+.slider-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.slider-row input[type=range]{
+  flex:1;
+  -webkit-appearance:none;
+  appearance:none;
+  height:3px;
+  background:var(--border-strong);
+  outline:none;
+  cursor:pointer;
+}
+.slider-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:16px;
+  height:16px;
+  background:var(--accent);
+  cursor:pointer;
+  border:0;
+}
+.slider-row input[type=range]::-moz-range-thumb{
+  width:16px;
+  height:16px;
+  background:var(--accent);
+  border:0;
+  cursor:pointer;
+}
+.slider-val{
+  font-size:calc(var(--font-size) * .82);
+  color:var(--text);
+  width:56px;
+  text-align:right;
+  font-family:'Consolas','Courier New',monospace;
+  letter-spacing:.04em;
+}
+
+/* SELECT */
+.devp-select{
+  width:100%;
+  padding:11px 32px 11px 11px;
+  background:var(--surface);
+  color:var(--text);
+  font-size:calc(var(--font-size) * .86);
+  font-weight:600;
+  letter-spacing:.1em;
+  border:1px solid var(--border-strong);
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path fill='%23888' d='M1 3l4 4 4-4z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 11px center;
+}
+.devp-select:focus{border-color:var(--accent)}
+
+/* HIDDEN FILE INPUT */
+.file-hidden{
+  position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+/* FOOTER OF DEVP */
+#devp-footer{
+  padding:14px 18px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+#devp-credit{
+  margin-top:12px;
+  font-size:calc(var(--font-size) * .72);
+  letter-spacing:.1em;
+  color:var(--text-mute);
+  text-align:center;
+  line-height:1.6;
+}
+#devp-credit a{
+  color:var(--text-dim);
+  text-decoration:underline;
+  text-underline-offset:2px;
+  transition:color .12s;
+}
+#devp-credit a:hover{
+  color:var(--accent);
+}
+
+/* TOAST */
+#toast{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%) translateY(80px);
+  padding:13px 26px;
+  background:var(--accent);
+  color:var(--accent-text);
+  font-size:calc(var(--font-size) * .82);
+  font-weight:700;
+  letter-spacing:.22em;
+  border:1px solid var(--accent);
+  transition:transform .25s,opacity .25s;
+  opacity:0;
+  z-index:300;
+  pointer-events:none;
+  white-space:nowrap;
+  max-width:90vw;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#toast.show{
+  transform:translateX(-50%) translateY(0);
+  opacity:1;
+}
+
+/* CUSTOM CONFIRM MODAL */
+#confirm-modal{
+  position:fixed;
+  inset:0;
+  z-index:400;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.6);
+}
+#confirm-modal.show{display:flex}
+.confirm-box{
+  width:min(420px,90vw);
+  background:var(--bg);
+  border:1px solid var(--border-strong);
+  border-top:3px solid var(--accent);
+}
+.confirm-body{
+  padding:24px 24px 18px;
+}
+.confirm-title{
+  font-size:calc(var(--font-size) * 1);
+  font-weight:700;
+  letter-spacing:.18em;
+  color:var(--text);
+  margin-bottom:8px;
+}
+.confirm-msg{
+  font-size:calc(var(--font-size) * .86);
+  color:var(--text-dim);
+  letter-spacing:.1em;
+  line-height:1.6;
+}
+.confirm-actions{
+  display:flex;
+  border-top:1px solid var(--border);
+}
+.confirm-btn{
+  flex:1;
+  padding:14px;
+  font-size:calc(var(--font-size) * .86);
+  font-weight:700;
+  letter-spacing:.2em;
+  color:var(--text-dim);
+  background:transparent;
+  transition:all .12s;
+}
+.confirm-btn+.confirm-btn{border-left:1px solid var(--border)}
+.confirm-btn:hover{
+  background:var(--surface);
+  color:var(--text);
+}
+.confirm-btn.danger:hover{
+  background:var(--accent);
+  color:var(--accent-text);
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════ */
+@media(max-width:768px){
+  :root{
+    --header-h:52px;
+    --tab-h:40px;
+    --devp-w:100vw;
+  }
+  #header{padding:0 14px;gap:8px}
+  #logo svg{height:28px}
+  #header-title{display:none}
+  .tab{padding:0 14px;font-size:calc(var(--font-size) * .82)}
+  .tab .tab-num{margin-right:6px}
+  #menu-panel{padding:30px 18px}
+  #menu-heading{font-size:calc(var(--font-size) * 1.9)}
+  #menu-grid{grid-template-columns:1fr;gap:10px}
+  .menu-card{padding:24px 20px;min-height:100px}
+  .menu-card-name{font-size:calc(var(--font-size) * 1.45)}
+  .menu-card-arrow{font-size:calc(var(--font-size) * 1.6)}
+}
+@media(max-width:480px){
+  .tab{padding:0 11px;font-size:calc(var(--font-size) * .76)}
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<div id="app">
+  <!-- ═════════ HEADER ═════════ -->
+  <header id="header">
+    <a id="logo" href="#" aria-label="RACINGBROS">
+      <!-- INLINE LOGO — white parts via currentColor, red kept as brand red -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 227.5 60" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M73.85,24.93c.34,0,.5.15.5.45,0,.14-.04.29-.13.45l-1.04,1.79c-.14.25-.34.46-.63.64-.28.17-.54.26-.78.26h-4.48c-.35,0-.52-.15-.52-.45,0-.14.04-.29.13-.45l.52-.9c.09-.16.13-.31.13-.45,0-.3-.17-.45-.5-.45-.25,0-.51.09-.78.26-.27.17-.49.38-.64.63l-4.16,7.16c-.14.25-.34.47-.63.64-.28.18-.54.27-.77.27h-4.47c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.66-8.06c.14-.25.35-.46.63-.63.28-.18.54-.26.79-.26h12.55Z"/>
+          <path d="M89.66,24.93c.34,0,.5.15.5.45,0,.14-.04.29-.13.45l-4.67,8.06c-.14.25-.35.46-.63.64-.28.17-.54.26-.77.26h-12.55c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l2.07-3.59c.15-.25.36-.46.63-.63.28-.18.54-.26.79-.26h6.27c.25,0,.51-.09.79-.26.27-.18.49-.38.64-.63l1.03-1.79c.08-.16.12-.32.12-.45,0-.3-.17-.45-.5-.45-.25,0-.5.09-.78.26-.27.18-.48.39-.63.64l-.52.9c-.14.25-.35.46-.62.63-.28.18-.54.26-.78.26h-4.5c-.35,0-.52-.15-.52-.45,0-.14.05-.29.13-.45l1.04-1.79c.14-.25.35-.46.63-.63.28-.18.54-.26.79-.26h12.55ZM80.65,31.21c.09-.16.13-.31.13-.45,0-.3-.17-.45-.52-.45-.25,0-.51.09-.78.26-.27.17-.48.39-.62.63l-1.05,1.79c-.09.17-.13.31-.13.45,0,.3.17.45.5.45.25,0,.51-.09.79-.26.28-.18.49-.39.63-.64l1.04-1.79Z"/>
+          <path d="M98.82,28.52c-.35,0-.52-.15-.52-.45,0-.14.04-.29.13-.45l.52-.9c.09-.16.13-.31.13-.45,0-.3-.17-.45-.5-.45-.25,0-.51.09-.78.26-.27.17-.49.39-.63.63l-3.62,6.27c-.09.16-.13.31-.13.45,0,.3.17.45.5.45.25,0,.52-.09.79-.26.28-.18.49-.39.63-.64l1.55-2.69c.15-.25.36-.46.63-.64.27-.18.54-.26.78-.26h4.48c.35,0,.52.15.52.45,0,.14-.05.29-.15.45l-2.07,3.59c-.13.25-.34.46-.62.64-.28.17-.54.26-.78.26h-12.55c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.67-8.06c.13-.25.34-.46.63-.63.28-.18.54-.26.79-.26h12.54c.33,0,.51.15.51.45,0,.14-.05.29-.13.45l-1.05,1.79c-.14.25-.34.46-.62.64-.28.17-.54.26-.78.26h-4.48Z"/>
+          <path d="M102.94,34.79c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.67-8.06c.14-.25.35-.46.63-.63.28-.17.54-.26.79-.26h4.48c.33,0,.5.15.5.45,0,.14-.04.29-.13.45l-4.67,8.06c-.14.25-.35.46-.63.64-.28.17-.54.26-.78.26h-4.48Z"/>
+          <path d="M128.92,24.93c.34,0,.51.15.51.45,0,.14-.04.29-.13.45l-4.67,8.06c-.14.25-.35.46-.62.64-.28.17-.54.26-.78.26h-4.48c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.14-7.17c.09-.16.13-.31.13-.45,0-.3-.17-.45-.5-.45-.25,0-.51.09-.79.26-.27.17-.49.39-.64.63l-4.15,7.17c-.13.25-.34.46-.62.64-.28.17-.54.26-.78.26h-4.48c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.67-8.06c.13-.25.34-.46.62-.63.28-.18.55-.26.8-.26h12.54Z"/>
+          <path d="M133,36.94c-.07-.13-.11-.31-.11-.52,0-.31.08-.59.23-.84.06-.12.09-.24.09-.35,0-.29-.18-.43-.54-.43h-6.27c-.35,0-.53-.15-.53-.45,0-.13.04-.28.13-.45l4.67-8.06c.14-.25.35-.46.63-.63.28-.18.54-.26.79-.26h12.54c.34,0,.51.15.51.45,0,.14-.05.29-.13.45l-1.05,1.79c-.13.25-.35.46-.62.63-.29.17-.54.26-.77.26h-4.48c-.35,0-.52-.15-.52-.45,0-.14.04-.29.13-.45l.52-.9c.09-.16.14-.31.14-.45,0-.3-.16-.45-.51-.45-.24,0-.51.09-.78.26-.27.17-.48.38-.63.63l-3.62,6.27c-.09.17-.13.31-.13.45,0,.3.16.45.5.45.25,0,.51-.09.79-.26.28-.18.48-.39.62-.64l1.55-2.69c.15-.25.36-.46.64-.63.27-.18.54-.26.78-.26h4.48c.35,0,.53.15.53.45,0,.14-.05.29-.15.45l-6.06,10.53c-.19.32-.39.49-.6.49-.11,0-.2-.06-.26-.18l-2.48-4.2Z"/>
+          <path d="M160.62,24.93c.34,0,.51.15.51.45,0,.14-.04.29-.13.45l-4.67,8.06c-.14.25-.35.46-.62.64-.28.17-.54.26-.78.26h-12.54c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l8.68-15.01c.19-.32.38-.49.58-.49.12,0,.21.06.28.17l2.48,4.22c.07.12.11.3.11.51,0,.31-.07.6-.22.86-.08.13-.11.24-.11.36,0,.29.18.43.56.43h6.27ZM154.2,26.73c.09-.16.13-.31.13-.45,0-.3-.17-.45-.51-.45-.24,0-.51.09-.78.26-.27.17-.48.39-.63.64l-3.62,6.27c-.09.16-.13.31-.13.45,0,.3.17.45.5.45.25,0,.52-.09.79-.26.28-.18.49-.39.62-.64l3.62-6.27Z"/>
+          <path d="M176.81,24.93c.34,0,.5.15.5.45,0,.14-.04.29-.13.45l-1.04,1.79c-.14.25-.34.46-.62.64-.28.17-.54.26-.78.26h-4.47c-.35,0-.53-.15-.53-.45,0-.14.04-.29.13-.45l.52-.9c.09-.16.13-.31.13-.45,0-.3-.17-.45-.5-.45-.25,0-.51.09-.79.26-.28.17-.49.38-.63.63l-4.16,7.16c-.14.25-.34.47-.63.64-.28.18-.54.27-.77.27h-4.47c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.67-8.06c.14-.25.34-.46.63-.63.28-.18.54-.26.79-.26h12.55Z"/>
+          <path d="M192.43,24.93c.33,0,.5.15.5.45,0,.14-.04.29-.13.45l-4.67,8.06c-.14.25-.35.46-.63.64-.28.17-.54.26-.78.26h-12.54c-.35,0-.52-.15-.52-.45,0-.13.04-.28.13-.45l4.67-8.06c.14-.25.35-.46.63-.63.28-.18.55-.26.79-.26h12.55ZM186.01,26.73c.09-.16.13-.31.13-.45,0-.3-.17-.45-.5-.45-.25,0-.51.09-.78.26-.28.17-.48.39-.64.64l-3.62,6.27c-.08.16-.13.31-.13.45,0,.3.17.45.5.45.25,0,.51-.09.79-.26.28-.18.49-.39.63-.64l3.62-6.27Z"/>
+          <path d="M202.06,28.52c-.35,0-.52-.15-.52-.45,0-.14.04-.29.13-.45l.52-.9c.09-.16.13-.31.13-.45,0-.3-.17-.45-.5-.45-.25,0-.51.09-.79.26-.27.17-.48.38-.63.63l-1.04,1.78c-.09.17-.13.32-.13.46,0,.3.17.45.52.45h6.28c.35,0,.53.15.53.45,0,.14-.05.29-.15.45l-2.07,3.59c-.13.25-.34.46-.62.64-.28.17-.54.26-.78.26h-12.54c-.35,0-.53-.15-.53-.45,0-.13.05-.28.13-.45l1.04-1.79c.14-.25.35-.46.63-.64.28-.17.54-.26.79-.26h4.48c.34,0,.51.15.51.45,0,.14-.04.29-.13.45l-.52.89c-.08.17-.13.31-.13.45,0,.3.17.45.51.45.25,0,.51-.09.79-.26.29-.18.5-.39.63-.64l1.05-1.79c.08-.16.13-.32.13-.45,0,-.3-.17-.45-.52-.45h-6.27c-.34,0-.51-.14-.51-.45,0-.13.05-.28.13-.45l2.07-3.58c.14-.25.35-.46.62-.63.28-.18.54-.26.8-.26h12.54c.33,0,.5.15.5.45,0,.14-.05.29-.13.45l-1.04,1.79c-.14.25-.35.46-.63.64-.28.17-.54.26-.77.26h-4.48Z"/>
+        </g>
+        <rect fill="#d7282f" x="14.5" y="13.54" width="32.68" height="32.68" rx="2.98" ry="2.98"/>
+        <path fill="currentColor" d="M44.82,28.91h-8.23c-.12,0-.22-.01-.31-.04-.27-.07-.4-.25-.4-.53,0-.14.04-.31.13-.46.19-.35.3-.72.3-1.13,0-.28-.05-.5-.14-.66l-2.26-3.85h4.21c.32,0,.67-.11,1.04-.35.37-.22.64-.5.82-.83l1.35-2.36c.13-.2.2-.4.2-.59,0-.39-.22-.58-.68-.58h-16.46c-.33,0-.68.11-1.03.35-.36.22-.64.5-.84.82l-6.12,10.59c-.12.21-.18.41-.18.59,0,.39.22.59.66.59h5.87c.33,0,.68-.11,1.04-.34.37-.23.64-.5.82-.84l5.47-9.4c.18-.32.45-.6.82-.83.36-.23.7-.34,1.01-.34.46,0,.69.19.69.59,0,.18-.06.37-.18.59l-.58,1s-.04.06-.06.09l-11.4,19.68c-.11.21-.18.41-.18.59,0,.39.22.59.66.59h16.46c.33,0,.68-.11,1.05-.34.36-.23.64-.51.81-.84l6.12-10.57c.14-.21.2-.42.2-.59,0-.4-.22-.59-.68-.59ZM36.42,31.27l-4.77,8.22c-.2.32-.47.61-.84.83-.35.23-.71.34-1.02.34-.46,0-.7-.2-.7-.58,0-.18.08-.38.21-.59l4.77-8.22c.18-.33.46-.61.82-.84.36-.22.7-.34,1.01-.34.45,0,.68.19.68.59,0,.18-.06.37-.17.59Z"/>
+      </svg>
+    </a>
+    <div id="header-title">▌ TOOLKIT <span class="red">/</span> HUB</div>
+    <button id="hamburger" aria-label="Open developer panel" title="OPEN DEV PANEL">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square">
+        <line x1="3" y1="6.5" x2="21" y2="6.5"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="17.5" x2="21" y2="17.5"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ═════════ TAB BAR ═════════ -->
+  <nav id="tab-bar" role="tablist"></nav>
+
+  <!-- ═════════ PANELS ═════════ -->
+  <main id="panels"></main>
+</div>
+
+<!-- ═════════ DEV PANEL ═════════ -->
+<div id="devp-overlay"></div>
+<aside id="devp" aria-label="Developer panel">
+  <div id="devp-header">
+    <span id="devp-title">DEV PANEL</span>
+    <button id="devp-close" aria-label="Close">✕</button>
+  </div>
+  <nav id="devp-tabs">
+    <button class="devp-tab active" data-section="tools">TOOLS</button>
+    <button class="devp-tab" data-section="theme">THEME</button>
+    <button class="devp-tab" data-section="type">TYPE</button>
+  </nav>
+  <div id="devp-body">
+
+    <!-- TOOLS SECTION -->
+    <section class="devp-section active" data-section="tools">
+      <div class="devp-group">
+        <div class="devp-label">MANAGE TOOLS</div>
+        <div id="tools-list"></div>
+        <button id="add-tool-btn" class="btn-primary">＋ ADD TOOL</button>
+        <input type="file" id="add-tool-input" class="file-hidden" accept=".html,.htm">
+      </div>
+      <div class="devp-group">
+        <div class="devp-label">USAGE</div>
+        <p class="tip-text">
+          <span>▦</span> &nbsp;DRAG TO REORDER<br>
+          <span>⤓</span> &nbsp;DOWNLOAD CURRENT FILE<br>
+          <span>↻</span> &nbsp;REPLACE / UPDATE BY UPLOAD<br>
+          <span>✕</span> &nbsp;REMOVE TOOL<br>
+          <span>•</span> &nbsp;CLICK NAME TO RENAME
+        </p>
+      </div>
+    </section>
+
+    <!-- THEME SECTION -->
+    <section class="devp-section" data-section="theme">
+      <div class="devp-group">
+        <div class="devp-label">MODE</div>
+        <div id="theme-toggle">
+          <button class="theme-opt active" data-theme="dark">▒ DARK</button>
+          <button class="theme-opt" data-theme="light">▓ LIGHT</button>
+        </div>
+      </div>
+      <div class="devp-group">
+        <div class="devp-label">COLOR SCHEME</div>
+        <div id="scheme-presets"></div>
+      </div>
+      <div class="devp-group">
+        <div class="devp-label">CUSTOM COLORS</div>
+        <div id="color-pickers"></div>
+      </div>
+      <div class="devp-group">
+        <button id="reset-theme" class="btn-secondary">↺ RESET COLORS</button>
+      </div>
+    </section>
+
+    <!-- TYPE SECTION -->
+    <section class="devp-section" data-section="type">
+      <div class="devp-group">
+        <div class="devp-label">FONT FAMILY</div>
+        <select id="font-select" class="devp-select"></select>
+        <p class="tip-text" style="margin-top:8px;line-height:1.55">
+          BAHNSCHRIFT IS A WINDOWS SYSTEM FONT. ON OTHER OS THE STACK FALLS BACK GRACEFULLY.
+        </p>
+      </div>
+      <div class="devp-group">
+        <div class="devp-label">FONT SIZE</div>
+        <div class="slider-row">
+          <input type="range" id="font-size-slider" min="11" max="20" step="1" value="14">
+          <span class="slider-val" id="font-size-val">14PX</span>
+        </div>
+      </div>
+      <div class="devp-group">
+        <div class="devp-label">LETTER SPACING</div>
+        <div class="slider-row">
+          <input type="range" id="tracking-slider" min="0" max="20" step="1" value="8">
+          <span class="slider-val" id="tracking-val">0.08</span>
+        </div>
+      </div>
+      <div class="devp-group">
+        <button id="reset-type" class="btn-secondary">↺ RESET TYPOGRAPHY</button>
+      </div>
+    </section>
+
+  </div>
+  <div id="devp-footer">
+    <button id="reset-all" class="btn-secondary">↺ RESET EVERYTHING</button>
+    <p id="devp-credit">© 2026 <a href="https://racingbros.com" target="_blank" rel="noopener noreferrer">RACINGBROS</a> · DESIGN &amp; DEVELOPMENT BY <a href="https://13studio.co" target="_blank" rel="noopener noreferrer">13STUDIO</a></p>
+  </div>
+</aside>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-body">
+      <div class="confirm-title" id="confirm-title">CONFIRM</div>
+      <div class="confirm-msg" id="confirm-msg"></div>
+    </div>
+    <div class="confirm-actions">
+      <button class="confirm-btn" id="confirm-cancel">CANCEL</button>
+      <button class="confirm-btn danger" id="confirm-ok">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   DEFAULTS
+   ════════════════════════════════════════ */
+const DEFAULT_TOOLS = [
+  { id:'t_big',    name:'BIG',                   source:'path', path:'BIG.html' },
+  { id:'t_global', name:'DISTRIBUTOR — GLOBAL', source:'path', path:'DISTRIBUTORS_GLOBAL.html' },
+  { id:'t_taiwan', name:'DISTRIBUTOR — TAIWAN', source:'path', path:'DISTRIBUTORS_TAIWAN.html' },
+  { id:'t_pubsys', name:'PUBSYS',                source:'path', path:'PUBSYS.html' },
+  { id:'t_post',   name:'POST CREATOR',          source:'path', path:'POST_CREATOR.html' },
+  { id:'t_rdpm',   name:'RDPM',                  source:'path', path:'RDPM.html' },
+  { id:'t_dng',    name:'DNG → PNG',             source:'path', path:'DNG_TO_PNG.html' },
+  { id:'t_manual', name:'MANUAL CREATOR',        source:'path', path:'MANUAL_CREATOR.html' },
+  { id:'t_reader', name:'READER',               source:'path', path:'READER.html' },
+  { id:'t_pe',     name:'PE',                    source:'path', path:'PE.html' },
+];
+
+const COLOR_KEYS = [
+  { key:'bg',           label:'BACKGROUND' },
+  { key:'surface',      label:'SURFACE' },
+  { key:'border',       label:'BORDER' },
+  { key:'text',         label:'TEXT' },
+  { key:'text-dim',     label:'TEXT DIM' },
+  { key:'accent',       label:'ACCENT' },
+];
+
+const SCHEMES = {
+  racing:{
+    name:'RACING RED',
+    swatches:['#0a0a0a','#d7282f','#f0f0f0','#888'],
+    theme:'dark',
+    colors:{ bg:'#0a0a0a',surface:'#141414','surface-2':'#1c1c1c',border:'#2a2a2a','border-strong':'#3a3a3a',text:'#f0f0f0','text-dim':'#888','text-mute':'#555',accent:'#d7282f','accent-text':'#ffffff',hover:'#1f1f1f' }
+  },
+  pit:{
+    name:'PIT WHITE',
+    swatches:['#ffffff','#d7282f','#0a0a0a','#888'],
+    theme:'light',
+    colors:{ bg:'#ffffff',surface:'#f5f5f5','surface-2':'#ebebeb',border:'#d8d8d8','border-strong':'#a8a8a8',text:'#0a0a0a','text-dim':'#666','text-mute':'#999',accent:'#d7282f','accent-text':'#ffffff',hover:'#e8e8e8' }
+  },
+  carbon:{
+    name:'CARBON',
+    swatches:['#1a1a1a','#ff6b00','#e0e0e0','#666'],
+    theme:'dark',
+    colors:{ bg:'#1a1a1a',surface:'#222','surface-2':'#2a2a2a',border:'#333','border-strong':'#444',text:'#e0e0e0','text-dim':'#888','text-mute':'#555',accent:'#ff6b00','accent-text':'#000','hover':'#262626' }
+  },
+  checker:{
+    name:'CHECKERED',
+    swatches:['#000','#fff','#888','#444'],
+    theme:'dark',
+    colors:{ bg:'#000',surface:'#0e0e0e','surface-2':'#181818',border:'#2a2a2a','border-strong':'#555',text:'#fff','text-dim':'#999','text-mute':'#555',accent:'#ffffff','accent-text':'#000',hover:'#1a1a1a' }
+  },
+  neon:{
+    name:'NEON GRID',
+    swatches:['#0c0a18','#00f0ff','#ff00aa','#7a7090'],
+    theme:'dark',
+    colors:{ bg:'#0c0a18',surface:'#15122a','surface-2':'#1d1838',border:'#2a234d','border-strong':'#3d3470',text:'#e6e0ff','text-dim':'#8e88c0','text-mute':'#5f5990',accent:'#00f0ff','accent-text':'#0a0820',hover:'#1a1632' }
+  },
+  mono:{
+    name:'MONO INK',
+    swatches:['#fff','#000','#555','#aaa'],
+    theme:'light',
+    colors:{ bg:'#ffffff',surface:'#f7f7f7','surface-2':'#eee',border:'#ddd','border-strong':'#888',text:'#000','text-dim':'#555','text-mute':'#aaa',accent:'#000000','accent-text':'#fff',hover:'#f0f0f0' }
+  }
+};
+
+const FONTS = [
+  { value:"'Bahnschrift','Bahnschrift SemiCondensed','DIN Alternate','DIN Condensed','Roboto Condensed','Barlow Condensed','Oswald','Arial Narrow',sans-serif", label:'BAHNSCHRIFT — DEFAULT' },
+  { value:"'Roboto Condensed','Barlow Condensed','Arial Narrow',sans-serif",                           label:'ROBOTO CONDENSED' },
+  { value:"'Barlow Condensed','Roboto Condensed','Arial Narrow',sans-serif",                          label:'BARLOW CONDENSED' },
+  { value:"'Oswald','Impact','Arial Narrow',sans-serif",                                              label:'OSWALD' },
+  { value:"'DIN Alternate','DIN Condensed','Bahnschrift','Roboto Condensed',sans-serif",              label:'DIN ALTERNATE' },
+  { value:"'Inter','Helvetica Neue','Helvetica','Arial',sans-serif",                                  label:'INTER' },
+  { value:"'Helvetica Neue','Helvetica','Arial',sans-serif",                                          label:'HELVETICA' },
+  { value:"'Courier New','Consolas',monospace",                                                       label:'COURIER — MONO' },
+  { value:"Impact,'Haettenschweiler','Arial Narrow',sans-serif",                                      label:'IMPACT' },
+];
+
+const LS_KEY  = 'rbros_hub_state_v1';
+const IDB_NAME= 'rbros_hub_db';
+const IDB_STORE='tools';
+
+let state = {
+  tools: structuredClone(DEFAULT_TOOLS),
+  activeTab:'menu',
+  theme:'dark',
+  scheme:'racing',
+  customColors:{},
+  font: FONTS[0].value,
+  fontSize: 14,
+  tracking: 8,
+  seededDefaults: DEFAULT_TOOLS.map(d=>d.id),  // bundled tools already merged into state
+};
+
+/* ════════════════════════════════════════
+   INDEXEDDB (uploaded tool HTML content)
+   ════════════════════════════════════════ */
+let _dbPromise = null;
+function openDB(){
+  if(_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve,reject)=>{
+    const req = indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE))
+        db.createObjectStore(IDB_STORE,{ keyPath:'id' });
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror   = ()=>reject(req.error);
+  });
+  return _dbPromise;
+}
+async function idbPut(id, content){
+  const db = await openDB();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put({ id, content });
+    tx.oncomplete = ()=>res();
+    tx.onerror    = ()=>rej(tx.error);
+  });
+}
+async function idbGet(id){
+  const db = await openDB();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(IDB_STORE,'readonly');
+    const r  = tx.objectStore(IDB_STORE).get(id);
+    r.onsuccess = ()=>res(r.result?.content || null);
+    r.onerror   = ()=>rej(r.error);
+  });
+}
+async function idbDelete(id){
+  const db = await openDB();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(id);
+    tx.oncomplete = ()=>res();
+    tx.onerror    = ()=>rej(tx.error);
+  });
+}
+
+/* ════════════════════════════════════════
+   LOCAL STORAGE
+   ════════════════════════════════════════ */
+function saveState(){
+  const safe = {
+    tools: state.tools.map(t=>({ id:t.id, name:t.name, source:t.source, path:t.path, fileName:t.fileName })),
+    activeTab: state.activeTab,
+    theme: state.theme,
+    scheme: state.scheme,
+    customColors: state.customColors,
+    font: state.font,
+    fontSize: state.fontSize,
+    tracking: state.tracking,
+    seededDefaults: state.seededDefaults,
+  };
+  try { localStorage.setItem(LS_KEY, JSON.stringify(safe)); } catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(Array.isArray(p.tools) && p.tools.length) state.tools = p.tools;
+    if(p.activeTab) state.activeTab = p.activeTab;
+    if(p.theme)     state.theme     = p.theme;
+    if(p.scheme)    state.scheme    = p.scheme;
+    if(p.customColors) state.customColors = p.customColors;
+    if(p.font)      state.font      = p.font;
+    if(typeof p.fontSize === 'number') state.fontSize = p.fontSize;
+    if(typeof p.tracking === 'number') state.tracking = p.tracking;
+
+    /* Reconcile bundled tools that shipped after this state was saved.
+       Without this, a returning user's cached tool list permanently
+       hides any newly-added default tool. Legacy states (no
+       seededDefaults) treat the defaults they already hold as "seen",
+       so only genuinely-new defaults get appended — as the last tab. */
+    const savedIds = new Set(state.tools.map(t=>t.id));
+    const seeded = new Set(
+      Array.isArray(p.seededDefaults)
+        ? p.seededDefaults
+        : DEFAULT_TOOLS.map(d=>d.id).filter(id=>savedIds.has(id))
+    );
+    DEFAULT_TOOLS.forEach((d,di)=>{
+      if(!savedIds.has(d.id) && !seeded.has(d.id)){
+        state.tools.splice(Math.min(di, state.tools.length), 0, structuredClone(d));  // insert at canonical position
+      }
+      seeded.add(d.id);   // mark every current default seen → user removals persist
+    });
+
+    /* Retire path-based defaults that have been dropped from the build.
+       Targets these specific ids only, so user-uploaded tools are safe. */
+    const RETIRED = new Set(['t_logo']);
+    state.tools = state.tools.filter(t=>!RETIRED.has(t.id));
+    state.seededDefaults = [...seeded].filter(id=>!RETIRED.has(id));
+  }catch(e){}
+}
+
+/* ════════════════════════════════════════
+   THEME APPLICATION
+   ════════════════════════════════════════ */
+function applyScheme(key){
+  const s = SCHEMES[key];
+  if(!s) return;
+  // wipe inline overrides first so scheme defines all
+  COLOR_KEYS.forEach(({key:k})=>document.documentElement.style.removeProperty('--'+k));
+  ['surface-2','border-strong','accent-text','hover','text-mute'].forEach(k=>document.documentElement.style.removeProperty('--'+k));
+  Object.entries(s.colors).forEach(([k,v])=>{
+    document.documentElement.style.setProperty('--'+k,v);
+  });
+  state.theme = s.theme;
+  document.body.setAttribute('data-theme', state.theme);
+}
+function applyCustomColors(){
+  Object.entries(state.customColors).forEach(([k,v])=>{
+    if(v) document.documentElement.style.setProperty('--'+k,v);
+  });
+}
+function applyTypography(){
+  document.documentElement.style.setProperty('--font',state.font);
+  document.documentElement.style.setProperty('--font-size', state.fontSize + 'px');
+  document.documentElement.style.setProperty('--tracking', (state.tracking/100) + 'em');
+}
+function applyAllTheme(){
+  applyScheme(state.scheme);
+  applyCustomColors();
+  applyTypography();
+  document.body.setAttribute('data-theme', state.theme);
+}
+
+/* ════════════════════════════════════════
+   TABS & PANELS
+   ════════════════════════════════════════ */
+const tabBarEl = document.getElementById('tab-bar');
+const panelsEl = document.getElementById('panels');
+
+function renderTabsAndPanels(){
+  tabBarEl.innerHTML = '';
+  panelsEl.innerHTML = '';
+
+  // Menu tab
+  const menuTab = document.createElement('button');
+  menuTab.className = 'tab';
+  menuTab.dataset.tab = 'menu';
+  menuTab.innerHTML = `MENU`;
+  menuTab.onclick = ()=>setActive('menu');
+  tabBarEl.appendChild(menuTab);
+
+  const menuPanel = document.createElement('div');
+  menuPanel.className = 'panel';
+  menuPanel.dataset.tab = 'menu';
+  menuPanel.id = 'menu-panel';
+  panelsEl.appendChild(menuPanel);
+
+  // Tool tabs
+  state.tools.forEach((tool,i)=>{
+    const num = String(i+1).padStart(2,'0');
+    const tab = document.createElement('button');
+    tab.className = 'tab';
+    tab.dataset.tab = tool.id;
+    tab.innerHTML = `<span class="tab-num">${num}</span>${escapeHtml(tool.name)}`;
+    tab.onclick = ()=>setActive(tool.id);
+    tabBarEl.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.dataset.tab = tool.id;
+    panelsEl.appendChild(panel);
+  });
+
+  renderMenu();
+  const validTab = state.activeTab === 'menu' || state.tools.find(t=>t.id===state.activeTab);
+  setActive(validTab ? state.activeTab : 'menu', { skipSave:true });
+}
+
+function renderMenu(){
+  const mp = document.getElementById('menu-panel');
+  if(!mp) return;
+  const cards = state.tools.map((t,i)=>`
+    <button class="menu-card" data-go="${t.id}">
+      <span class="menu-card-text">
+        <span class="menu-card-num">TOOL ${String(i+1).padStart(2,'0')}</span>
+        <span class="menu-card-name">${escapeHtml(t.name)}</span>
+      </span>
+      <span class="menu-card-arrow">→</span>
+    </button>
+  `).join('');
+  mp.innerHTML = `
+    <div id="menu-eyebrow">RACINGBROS TOOLKIT</div>
+    <h1 id="menu-heading">SELECT A TOOL</h1>
+    <p id="menu-sub">${state.tools.length} TOOL${state.tools.length===1?'':'S'} ACTIVE  /  TAP A CARD OR USE THE TAB BAR</p>
+    <div id="menu-grid">${cards || '<p style="color:var(--text-dim);letter-spacing:.16em">NO TOOLS LOADED — OPEN THE DEV PANEL TO ADD ONE.</p>'}</div>
+    <div id="menu-footer">▌ DEV PANEL — TOP RIGHT — TO ADD / REORDER / RESKIN</div>
+  `;
+  mp.querySelectorAll('[data-go]').forEach(b=>{
+    b.onclick = ()=>setActive(b.dataset.go);
+  });
+}
+
+async function setActive(tab, opts={}){
+  state.activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.dataset.tab===tab));
+
+  if(tab !== 'menu'){
+    const tool = state.tools.find(t=>t.id===tab);
+    if(tool) await loadIframe(tool);
+  }
+  if(!opts.skipSave) saveState();
+}
+
+async function loadIframe(tool){
+  const panel = document.querySelector(`.panel[data-tab="${cssEsc(tool.id)}"]`);
+  if(!panel) return;
+
+  let src;
+  if(tool.source === 'upload'){
+    const content = await idbGet(tool.id);
+    if(!content){
+      panel.innerHTML = `<div style="padding:30px;color:var(--text-dim);letter-spacing:.12em">▌ UPLOADED TOOL DATA NOT FOUND — RE-UPLOAD VIA DEV PANEL.</div>`;
+      return;
+    }
+    const blob = new Blob([content], { type:'text/html' });
+    src = URL.createObjectURL(blob);
+  } else {
+    src = tool.path;
+  }
+
+  const existing = panel.querySelector('iframe');
+  if(existing && existing.dataset.srcKey === (tool.source+'|'+(tool.path||tool.id))) return;
+
+  panel.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.src = src;
+  iframe.dataset.srcKey = tool.source+'|'+(tool.path||tool.id);
+  iframe.title = tool.name;
+  iframe.allow = 'clipboard-read; clipboard-write; fullscreen';
+  panel.appendChild(iframe);
+}
+
+function invalidateIframe(toolId){
+  const panel = document.querySelector(`.panel[data-tab="${cssEsc(toolId)}"]`);
+  if(!panel) return;
+  panel.innerHTML = '';
+}
+
+/* ════════════════════════════════════════
+   TOOLS LIST IN DEV PANEL
+   ════════════════════════════════════════ */
+const toolsListEl = document.getElementById('tools-list');
+
+function renderToolsList(){
+  toolsListEl.innerHTML = '';
+  if(!state.tools.length){
+    toolsListEl.innerHTML = '<div class="empty-tools">▌ NO TOOLS — TAP "ADD TOOL" BELOW</div>';
+    return;
+  }
+  state.tools.forEach((tool, idx)=>{
+    const item = document.createElement('div');
+    item.className = 'tool-item';
+    item.draggable = true;
+    item.dataset.idx = idx;
+    item.dataset.id  = tool.id;
+    item.innerHTML = `
+      <div class="tool-handle" title="DRAG TO REORDER">▦</div>
+      <div class="tool-info">
+        <input class="tool-name-input" type="text" value="${escapeAttr(tool.name)}" spellcheck="false" data-action="rename">
+        <div class="tool-meta ${tool.source==='upload'?'upload':''}">${tool.source==='upload' ? '⬆ UPLOADED' : '↪ '+(tool.path||'')}</div>
+      </div>
+      <div class="tool-actions">
+        <button class="tool-btn" data-action="download" title="DOWNLOAD">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M12 3v13M6 11l6 6 6-6M4 21h16"/></svg>
+        </button>
+        <button class="tool-btn" data-action="replace" title="REPLACE / UPDATE">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M21 8a9 9 0 0 0-15-3M3 16a9 9 0 0 0 15 3M21 3v5h-5M3 21v-5h5"/></svg>
+        </button>
+        <button class="tool-btn" data-action="remove" title="REMOVE">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M5 5l14 14M5 19L19 5"/></svg>
+        </button>
+      </div>
+    `;
+
+    // RENAME
+    const renameInput = item.querySelector('[data-action="rename"]');
+    renameInput.addEventListener('change', e=>{
+      const v = e.target.value.trim();
+      if(v){
+        tool.name = v;
+        saveState();
+        renderTabsAndPanels();
+      } else {
+        e.target.value = tool.name;
+      }
+    });
+    renameInput.addEventListener('keydown', e=>{
+      if(e.key==='Enter') e.target.blur();
+    });
+
+    // ACTIONS
+    item.querySelector('[data-action="download"]').onclick = ()=>downloadTool(tool);
+    item.querySelector('[data-action="replace"]').onclick  = ()=>replaceTool(tool);
+    item.querySelector('[data-action="remove"]').onclick   = ()=>removeTool(tool);
+
+    // DRAG & DROP
+    item.addEventListener('dragstart', e=>{
+      item.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', String(idx));
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', ()=>{
+      item.classList.remove('dragging');
+      document.querySelectorAll('.tool-item').forEach(x=>x.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', ()=>item.classList.remove('drag-over'));
+    item.addEventListener('drop', e=>{
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const from = parseInt(e.dataTransfer.getData('text/plain'),10);
+      const to   = parseInt(item.dataset.idx,10);
+      if(isNaN(from)||isNaN(to)||from===to) return;
+      const [moved] = state.tools.splice(from,1);
+      state.tools.splice(to,0,moved);
+      saveState();
+      renderToolsList();
+      renderTabsAndPanels();
+    });
+
+    toolsListEl.appendChild(item);
+  });
+}
+
+/* ════════════════════════════════════════
+   TOOL ACTIONS
+   ════════════════════════════════════════ */
+async function downloadTool(tool){
+  let content;
+  let filename = tool.fileName || (tool.path ? tool.path.split('/').pop() : tool.name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_')+'.html');
+  if(tool.source === 'upload'){
+    content = await idbGet(tool.id);
+    if(!content){ toast('NO CONTENT TO DOWNLOAD'); return; }
+  } else {
+    try{
+      const r = await fetch(tool.path);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      content = await r.text();
+    }catch(err){
+      toast('FETCH FAILED — KEEP TOOL FILES IN THE SAME FOLDER AS HUB.HTML');
+      return;
+    }
+  }
+  const blob = new Blob([content], { type:'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  toast('DOWNLOADED  ·  '+filename.toUpperCase());
+}
+
+function replaceTool(tool){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.html,.htm';
+  input.onchange = async ()=>{
+    const f = input.files && input.files[0];
+    if(!f) return;
+    try{
+      const text = await f.text();
+      await idbPut(tool.id, text);
+      tool.source   = 'upload';
+      tool.fileName = f.name;
+      delete tool.path;
+      invalidateIframe(tool.id);
+      saveState();
+      renderToolsList();
+      if(state.activeTab === tool.id) loadIframe(tool);
+      toast('REPLACED  ·  '+tool.name);
+    }catch(err){ toast('FAILED TO READ FILE'); }
+  };
+  input.click();
+}
+
+function removeTool(tool){
+  showConfirm({
+    title:'REMOVE TOOL',
+    msg:`REMOVE "${tool.name}"? THIS CANNOT BE UNDONE.`,
+    okLabel:'REMOVE',
+    danger:true,
+    onOk: async ()=>{
+      if(tool.source === 'upload') await idbDelete(tool.id);
+      state.tools = state.tools.filter(t=>t.id !== tool.id);
+      if(state.activeTab === tool.id) state.activeTab = 'menu';
+      saveState();
+      renderToolsList();
+      renderTabsAndPanels();
+      toast('REMOVED');
+    }
+  });
+}
+
+document.getElementById('add-tool-btn').onclick = ()=>{
+  document.getElementById('add-tool-input').click();
+};
+document.getElementById('add-tool-input').onchange = async e =>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  try{
+    const text = await f.text();
+    const id   = 't_' + Math.random().toString(36).slice(2,10);
+    const name = f.name.replace(/\.html?$/i,'').replace(/[_-]+/g,' ').toUpperCase();
+    await idbPut(id, text);
+    state.tools.push({ id, name, source:'upload', fileName:f.name });
+    saveState();
+    renderToolsList();
+    renderTabsAndPanels();
+    toast('ADDED  ·  '+name);
+  }catch(err){ toast('FAILED TO READ FILE'); }
+  e.target.value = '';
+};
+
+/* ════════════════════════════════════════
+   THEME CONTROLS
+   ════════════════════════════════════════ */
+function renderSchemePresets(){
+  const wrap = document.getElementById('scheme-presets');
+  wrap.innerHTML = '';
+  Object.entries(SCHEMES).forEach(([key,s])=>{
+    const btn = document.createElement('button');
+    btn.className = 'scheme-preset' + (state.scheme===key ? ' active' : '');
+    btn.dataset.scheme = key;
+    btn.innerHTML = `
+      <div class="scheme-name">${s.name}</div>
+      <div class="scheme-swatches">${s.swatches.map(c=>`<div class="swatch" style="background:${c}"></div>`).join('')}</div>
+    `;
+    btn.onclick = ()=>{
+      state.scheme = key;
+      state.customColors = {};
+      applyAllTheme();
+      renderSchemePresets();
+      renderColorPickers();
+      updateThemeToggle();
+      saveState();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+function renderColorPickers(){
+  const wrap = document.getElementById('color-pickers');
+  wrap.innerHTML = '';
+  COLOR_KEYS.forEach(({ key, label })=>{
+    const raw = state.customColors[key] || getComputedStyle(document.documentElement).getPropertyValue('--'+key).trim();
+    const hex = normalizeHex(raw);
+    const row = document.createElement('div');
+    row.className = 'color-row';
+    row.innerHTML = `
+      <span class="color-row-label">${label}</span>
+      <span class="color-controls">
+        <span class="color-hex">${hex.toUpperCase()}</span>
+        <span class="color-swatch" style="background:${hex}">
+          <input type="color" value="${hex}" data-cvar="${key}">
+        </span>
+      </span>
+    `;
+    row.querySelector('input').addEventListener('input', e=>{
+      const v = e.target.value;
+      state.customColors[key] = v;
+      document.documentElement.style.setProperty('--'+key, v);
+      row.querySelector('.color-swatch').style.background = v;
+      row.querySelector('.color-hex').textContent = v.toUpperCase();
+      saveState();
+    });
+    wrap.appendChild(row);
+  });
+}
+
+function updateThemeToggle(){
+  document.querySelectorAll('.theme-opt').forEach(b=>{
+    b.classList.toggle('active', b.dataset.theme === state.theme);
+  });
+}
+
+document.querySelectorAll('.theme-opt').forEach(b=>{
+  b.onclick = ()=>{
+    const targetTheme = b.dataset.theme;
+    // Find a matching scheme (light vs dark) and swap if currently mismatched
+    if(SCHEMES[state.scheme]?.theme !== targetTheme){
+      const next = Object.entries(SCHEMES).find(([,s])=>s.theme === targetTheme);
+      if(next){
+        state.scheme = next[0];
+        state.customColors = {};
+      }
+    }
+    state.theme = targetTheme;
+    applyAllTheme();
+    updateThemeToggle();
+    renderSchemePresets();
+    renderColorPickers();
+    saveState();
+  };
+});
+
+document.getElementById('reset-theme').onclick = ()=>{
+  state.scheme = 'racing';
+  state.customColors = {};
+  applyAllTheme();
+  renderSchemePresets();
+  renderColorPickers();
+  updateThemeToggle();
+  saveState();
+  toast('COLORS RESET');
+};
+
+/* ════════════════════════════════════════
+   TYPOGRAPHY CONTROLS
+   ════════════════════════════════════════ */
+function renderFontSelect(){
+  const sel = document.getElementById('font-select');
+  sel.innerHTML = '';
+  FONTS.forEach(f=>{
+    const opt = document.createElement('option');
+    opt.value = f.value;
+    opt.textContent = f.label;
+    if(f.value === state.font) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+document.getElementById('font-select').onchange = e=>{
+  state.font = e.target.value;
+  applyTypography();
+  saveState();
+};
+
+const fsSlider = document.getElementById('font-size-slider');
+const fsVal    = document.getElementById('font-size-val');
+fsSlider.addEventListener('input', ()=>{
+  state.fontSize = parseInt(fsSlider.value,10);
+  fsVal.textContent = state.fontSize + 'PX';
+  applyTypography();
+  saveState();
+});
+
+const trSlider = document.getElementById('tracking-slider');
+const trVal    = document.getElementById('tracking-val');
+trSlider.addEventListener('input', ()=>{
+  state.tracking = parseInt(trSlider.value,10);
+  trVal.textContent = (state.tracking/100).toFixed(2);
+  applyTypography();
+  saveState();
+});
+
+document.getElementById('reset-type').onclick = ()=>{
+  state.font     = FONTS[0].value;
+  state.fontSize = 14;
+  state.tracking = 8;
+  fsSlider.value = state.fontSize;
+  trSlider.value = state.tracking;
+  fsVal.textContent = state.fontSize + 'PX';
+  trVal.textContent = (state.tracking/100).toFixed(2);
+  renderFontSelect();
+  applyTypography();
+  saveState();
+  toast('TYPOGRAPHY RESET');
+};
+
+/* ════════════════════════════════════════
+   RESET ALL
+   ════════════════════════════════════════ */
+document.getElementById('reset-all').onclick = ()=>{
+  showConfirm({
+    title:'RESET EVERYTHING',
+    msg:'RESET ALL TOOLS, THEMES AND TYPOGRAPHY TO DEFAULT? ANY UPLOADED TOOL FILES WILL BE PURGED.',
+    okLabel:'RESET ALL',
+    danger:true,
+    onOk: async ()=>{
+      for(const t of state.tools){
+        if(t.source === 'upload'){
+          try{ await idbDelete(t.id); }catch(e){}
+        }
+      }
+      state = {
+        tools: structuredClone(DEFAULT_TOOLS),
+        activeTab:'menu',
+        theme:'dark',
+        scheme:'racing',
+        customColors:{},
+        font: FONTS[0].value,
+        fontSize: 14,
+        tracking: 8,
+      };
+      saveState();
+      applyAllTheme();
+      renderTabsAndPanels();
+      renderToolsList();
+      renderSchemePresets();
+      renderColorPickers();
+      updateThemeToggle();
+      renderFontSelect();
+      fsSlider.value = 14;
+      trSlider.value = 8;
+      fsVal.textContent = '14PX';
+      trVal.textContent = '0.08';
+      toast('RESET TO DEFAULTS');
+    }
+  });
+};
+
+/* ════════════════════════════════════════
+   DEV PANEL OPEN/CLOSE & SECTION SWITCH
+   ════════════════════════════════════════ */
+const devp        = document.getElementById('devp');
+const devpOverlay = document.getElementById('devp-overlay');
+const hamburger   = document.getElementById('hamburger');
+
+function openDevp(){
+  devp.classList.add('open');
+  devpOverlay.classList.add('show');
+}
+function closeDevp(){
+  devp.classList.remove('open');
+  devpOverlay.classList.remove('show');
+}
+hamburger.onclick = openDevp;
+document.getElementById('devp-close').onclick = closeDevp;
+devpOverlay.onclick = closeDevp;
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    if(document.getElementById('confirm-modal').classList.contains('show')){
+      hideConfirm();
+    } else if(devp.classList.contains('open')){
+      closeDevp();
+    }
+  }
+});
+
+document.querySelectorAll('.devp-tab').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.devp-tab').forEach(x=>x.classList.toggle('active', x===t));
+    document.querySelectorAll('.devp-section').forEach(s=>s.classList.toggle('active', s.dataset.section === t.dataset.section));
+  };
+});
+
+/* ════════════════════════════════════════
+   CONFIRM MODAL
+   ════════════════════════════════════════ */
+const confirmModal = document.getElementById('confirm-modal');
+const confirmTitle = document.getElementById('confirm-title');
+const confirmMsg   = document.getElementById('confirm-msg');
+const confirmOk    = document.getElementById('confirm-ok');
+const confirmCancel= document.getElementById('confirm-cancel');
+let _confirmHandler = null;
+
+function showConfirm({ title='CONFIRM', msg='', okLabel='CONFIRM', danger=false, onOk }){
+  confirmTitle.textContent = title;
+  confirmMsg.textContent   = msg;
+  confirmOk.textContent    = okLabel;
+  confirmOk.classList.toggle('danger', !!danger);
+  _confirmHandler = onOk;
+  confirmModal.classList.add('show');
+}
+function hideConfirm(){
+  confirmModal.classList.remove('show');
+  _confirmHandler = null;
+}
+confirmOk.onclick = ()=>{
+  const h = _confirmHandler;
+  hideConfirm();
+  if(typeof h === 'function') h();
+};
+confirmCancel.onclick = hideConfirm;
+confirmModal.addEventListener('click', e=>{ if(e.target === confirmModal) hideConfirm(); });
+
+/* ════════════════════════════════════════
+   UTILITIES
+   ════════════════════════════════════════ */
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove('show'), 2400);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+function cssEsc(s){ return (CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/"/g,'\\"'); }
+function normalizeHex(v){
+  v = (v||'').trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(v)) return v.toLowerCase();
+  if(/^#[0-9a-fA-F]{3}$/.test(v)){
+    return '#' + [...v.slice(1)].map(x=>x+x).join('').toLowerCase();
+  }
+  const m = v.match(/rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/);
+  if(m){
+    return '#' + [m[1],m[2],m[3]].map(n=>(+n).toString(16).padStart(2,'0')).join('');
+  }
+  return '#000000';
+}
+
+/* ════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════ */
+loadState();
+saveState();   // persist the reconciled tool list + seededDefaults right away
+applyAllTheme();
+renderTabsAndPanels();
+
+/* Logo → first tab (MENU). Acts as the global home button from any tool. */
+const logoEl = document.getElementById('logo');
+if(logoEl) logoEl.addEventListener('click', e=>{ e.preventDefault(); setActive('menu'); });
+
+renderToolsList();
+renderSchemePresets();
+renderColorPickers();
+updateThemeToggle();
+renderFontSelect();
+fsSlider.value = state.fontSize;
+trSlider.value = state.tracking;
+fsVal.textContent = state.fontSize + 'PX';
+trVal.textContent = (state.tracking/100).toFixed(2);
+</script>
+</body>
+</html>

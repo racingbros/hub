@@ -1,0 +1,2416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POST CREATOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --din: 'DIN', 'DIN Alternate', 'D-DIN', 'Barlow Condensed', 'Oswald', 'Arial Narrow', sans-serif;
+  --tc:  'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-ui: var(--din);
+  --font-size-base: 13px;
+  --font-scale: 1;             /* multiplies every UI font-size */
+  --ui-letter-spacing: .06em;  /* base tracking */
+  --grid-alpha: 0.30;
+
+  --bg-0: #0b0b0c;
+  --bg-1: #141416;
+  --bg-2: #1c1c20;
+  --bg-3: #26262b;
+  --line: #2e2e34;
+  --line-soft: #1f1f24;
+  --ink: #f2f2f2;
+  --ink-2: #a8a8b0;
+  --ink-3: #6f6f78;
+  --canvas-mat: #0a0a0b;
+  --grid: 255,255,255;
+  --shadow: 0 1px 0 rgba(255,255,255,.02), 0 12px 40px rgba(0,0,0,.55);
+  --warn: #f7b500;
+  --select: #4a90e2;
+}
+[data-theme="light"]{
+  --bg-0: #f4f4f3;
+  --bg-1: #ffffff;
+  --bg-2: #f7f7f6;
+  --bg-3: #ececea;
+  --line: #d8d8d4;
+  --line-soft: #e8e8e4;
+  --ink: #0e0e10;
+  --ink-2: #4a4a52;
+  --ink-3: #8a8a92;
+  --canvas-mat: #e8e8e6;
+  --grid: 14,14,16;
+  --shadow: 0 1px 0 rgba(0,0,0,.02), 0 8px 30px rgba(0,0,0,.06);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; }
+body{
+  background:var(--bg-0);
+  color:var(--ink);
+  font-family:var(--font-ui);
+  font-size:var(--font-size-base);
+  font-weight:500;
+  letter-spacing:var(--ui-letter-spacing);
+  text-transform:uppercase;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{
+  font:inherit; color:inherit; background:transparent;
+  border:1px solid var(--line); padding:0; cursor:pointer;
+  text-transform:uppercase; letter-spacing:.08em;
+  border-radius:0;
+  transition:background .12s ease, border-color .12s ease, color .12s ease;
+}
+button:hover{ background:var(--bg-3); border-color:var(--ink-3); }
+button:active{ background:var(--ink); color:var(--bg-0); }
+input,select,textarea{
+  font:inherit; color:inherit; background:var(--bg-2);
+  border:1px solid var(--line); padding:6px 8px;
+  text-transform:uppercase; letter-spacing:.06em;
+  border-radius:0; outline:none;
+}
+input:focus,select:focus,textarea:focus{ border-color:var(--ink); }
+
+/* APP SHELL */
+.app{
+  display:grid;
+  grid-template-rows: 52px 1fr 132px;
+  height:100vh;
+  background:var(--bg-0);
+}
+
+/* STRIP — TOOLS (now also hosts version + status + hamburger) */
+.strip-tools{
+  display:flex; align-items:center; gap:6px;
+  padding:8px 12px;
+  border-bottom:1px solid var(--line);
+  background:var(--bg-1);
+  /* lock dimensions — no vertical scrollbar, horizontal scroll only when narrow */
+  height:52px;
+  min-height:52px;
+  max-height:52px;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.strip-tools button{
+  height:32px; padding:0 12px;
+  font-size:calc(11px * var(--font-scale)); font-weight:600;
+  white-space:nowrap;
+}
+.strip-tools .sep{ width:1px; height:18px; background:var(--line); margin:0 4px; }
+.strip-tools .file-name{
+  margin-left:auto;
+  color:var(--ink-3); font-size:calc(11px * var(--font-scale));
+  padding:0 8px;
+  white-space:nowrap;
+}
+.strip-tools .tools-meta{
+  display:flex; align-items:center; gap:10px;
+  color:var(--ink-3);
+  font-size:calc(11px * var(--font-scale));
+  letter-spacing:.16em;
+  padding:0 8px;
+  white-space:nowrap;
+}
+.strip-tools .tools-meta .ver{ color:var(--ink-2); }
+.strip-tools .tools-meta .dot{
+  width:6px; height:6px; background:var(--ink-2); display:inline-block;
+}
+.strip-tools .tools-meta .status{ color:var(--ink-3); }
+
+.hamburger-inline{
+  width:32px; height:32px;
+  border:1px solid var(--line);
+  background:var(--bg-1);
+  display:inline-flex; flex-direction:column; justify-content:center; align-items:center; gap:3px;
+  padding:0;
+  cursor:pointer;
+  flex:0 0 auto;
+}
+.hamburger-inline span{ display:block; width:14px; height:1px; background:var(--ink); }
+.hamburger-inline:hover{ border-color:var(--ink-2); }
+.hamburger-inline.active{ background:var(--ink); border-color:var(--ink); }
+.hamburger-inline.active span{ background:var(--bg-0); }
+
+/* STRIP 2 — WORK AREA */
+.strip-work{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  min-height:0;
+  border-bottom:1px solid var(--line);
+}
+.panel{
+  background:var(--bg-1);
+  display:flex; flex-direction:column;
+  min-height:0;
+}
+.panel-l{ border-right:1px solid var(--line); }
+
+.panel h3{
+  font-size:calc(10px * var(--font-scale)); font-weight:700; letter-spacing:.22em;
+  color:var(--ink-3);
+  margin:0; padding:10px 12px;
+  border-bottom:1px solid var(--line-soft);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel-body{ overflow:auto; flex:1; }
+
+/* LAYERS */
+.layers{ list-style:none; margin:0; padding:0; }
+.layers li{
+  display:flex; align-items:center; gap:8px;
+  padding:7px 10px 7px 12px;
+  font-size:calc(11px * var(--font-scale));
+  border-left:2px solid transparent;
+  cursor:pointer;
+  color:var(--ink-2);
+  border-bottom:1px solid var(--line-soft);
+  user-select:none;
+}
+.layers li:hover{ background:var(--bg-2); color:var(--ink); }
+.layers li.active{ background:var(--bg-2); color:var(--ink); border-left-color:var(--select); }
+.layers li .ic{ width:10px; height:10px; border:1px solid var(--ink-3); display:inline-block; flex:0 0 auto; }
+.layers li.bg .ic{ background:var(--ink-3); }
+.layers li .name{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.layers li.unlocked .name{ color:var(--warn); }
+.layers li .grip{ flex:0 0 auto; }
+.layers li.dragging{ opacity:.4; }
+.layers-empty{
+  padding:20px 14px;
+  color:var(--ink-3);
+  font-size:calc(10px * var(--font-scale));
+  letter-spacing:.18em;
+  text-align:center;
+  line-height:1.6;
+}
+
+.lock-btn{
+  width:20px; height:20px; border:1px solid var(--line);
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--bg-1); cursor:pointer;
+}
+.lock-btn:hover{ border-color:var(--ink-2); }
+.lock-btn svg{ width:11px; height:11px; }
+.lock-btn.unlocked{ color:var(--warn); border-color:var(--warn); }
+.lock-btn.locked{ color:var(--ink-3); }
+
+.del-btn{
+  width:18px; height:20px; border:1px solid var(--line);
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--bg-1); cursor:pointer;
+  color:var(--ink-3);
+  font-size:calc(13px * var(--font-scale)); line-height:1; font-weight:400; padding:0;
+}
+.del-btn:hover{ border-color:#e25555; color:#e25555; background:var(--bg-3); }
+
+.mini-btn{
+  font: inherit;
+  font-size:calc(9px * var(--font-scale)); font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  padding:4px 7px;
+  height:auto;
+  border:1px solid var(--line);
+  background:var(--bg-2);
+  color:var(--ink-2);
+  cursor:pointer;
+  border-radius:0;
+}
+.mini-btn:hover{ border-color:var(--ink); background:var(--bg-3); color:var(--ink); }
+.layer-actions{ display:flex; gap:4px; }
+
+/* PROPERTIES */
+.props-area{
+  border-top:1px solid var(--line);
+  background:var(--bg-1);
+}
+.props-area .ph{
+  font-size:calc(10px * var(--font-scale)); font-weight:700; letter-spacing:.22em;
+  color:var(--ink-3);
+  padding:10px 12px;
+  border-bottom:1px solid var(--line-soft);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.props-area .ph .which{ color:var(--ink); }
+.props-area .pbody{ padding:10px 12px 14px; }
+.props-empty{ color:var(--ink-3); font-size:calc(10px * var(--font-scale)); letter-spacing:.18em; padding:8px 0 4px; }
+
+.group{ padding:8px 0 12px; border-bottom:1px solid var(--line-soft); }
+.group:last-child{ border-bottom:0; padding-bottom:4px; }
+.group label{
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:calc(10px * var(--font-scale)); font-weight:700; letter-spacing:.22em;
+  color:var(--ink-3); margin-bottom:6px;
+}
+.group label .val{ color:var(--ink); font-weight:700; }
+.group input[type="text"], .group textarea{
+  width:100%; font-family: var(--tc); text-transform:none; letter-spacing:.04em;
+  font-size:calc(12px * var(--font-scale)); font-weight:500;
+}
+.group textarea{ resize:vertical; min-height:36px; }
+.group .row{ display:flex; gap:6px; }
+.group .row > *{ flex:1; }
+.group input[type="range"]{ width:100%; accent-color:var(--ink); background:transparent; padding:0; border:0; }
+.group .hint{ color:var(--ink-3); font-size:calc(10px * var(--font-scale)); margin-top:6px; letter-spacing:.14em; }
+.group .row.xy input{
+  font-family: var(--din); text-transform:uppercase; letter-spacing:.06em;
+  font-size:calc(11px * var(--font-scale));
+}
+.group.locked-note{
+  display:flex; align-items:center; gap:8px;
+  color:var(--ink-3); font-size:calc(10px * var(--font-scale)); letter-spacing:.18em;
+  padding:6px 0;
+}
+.group.locked-note .pad{
+  width:18px; height:18px; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center;
+}
+
+.upload-zone{
+  border:1px dashed var(--line);
+  padding:14px;
+  text-align:center;
+  cursor:pointer;
+  color:var(--ink-3);
+  font-size:calc(10px * var(--font-scale)); letter-spacing:.2em;
+}
+.upload-zone:hover{ border-color:var(--ink-2); color:var(--ink-2); }
+.upload-zone.has-file{ border-style:solid; border-color:var(--ink-3); color:var(--ink); }
+
+/* CANVAS */
+.canvas-area{
+  background:var(--canvas-mat);
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  min-height:0;
+}
+.canvas-area.drag-over::after{
+  content:'DROP IMAGE TO REPLACE BACKGROUND';
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.5);
+  color:#fff;
+  font-size:calc(12px * var(--font-scale)); letter-spacing:.2em;
+  border:2px dashed #fff;
+  pointer-events:none;
+  z-index:20;
+}
+
+.stage{
+  position:relative;
+  background:transparent;
+  box-shadow:var(--shadow);
+}
+.stage .canvas-bg{
+  position:absolute; inset:0;
+  background:repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 50% / 16px 16px;
+}
+.stage .canvas-svg{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  display:block;
+}
+.stage .canvas-svg svg{ width:100%; height:100%; display:block; }
+
+.stage .grid-overlay{
+  position:absolute; inset:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(to right, rgba(var(--grid),var(--grid-alpha)) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--grid),var(--grid-alpha)) 1px, transparent 1px);
+  background-size: calc(100%/3) calc(100%/3);
+  background-position: 0 0;
+  z-index:5;
+}
+.stage .grid-overlay::before{
+  content:''; position:absolute; inset:0;
+  border:1px solid rgba(var(--grid),calc(var(--grid-alpha) * 1.4));
+}
+
+/* DRAG OVERLAY (above SVG, above grid) */
+.drag-overlay{
+  position:absolute; inset:0;
+  z-index:10;
+  pointer-events:none;
+}
+.drag-box{
+  position:absolute;
+  pointer-events:auto;
+  cursor:move;
+  border:1px dashed rgba(74,144,226,.7);
+  background:transparent;
+}
+.drag-box.active{
+  border:1px dashed rgba(247,181,0,.95);
+  background:rgba(247,181,0,.04);
+}
+.drag-box .lbl{
+  position:absolute; left:-1px; top:-18px;
+  background:var(--warn); color:#000;
+  font-size:calc(9px * var(--font-scale)); font-weight:700; letter-spacing:.14em;
+  padding:2px 5px;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.drag-box .handle{
+  position:absolute; width:10px; height:10px;
+  background:var(--warn); border:1px solid #000;
+  pointer-events:auto;
+}
+.drag-box .handle.br{ right:-5px; bottom:-5px; cursor:nwse-resize; }
+
+/* INLINE TEXT EDITOR (on canvas double-click) */
+.inline-edit{
+  position:absolute;
+  z-index:30;
+  background:rgba(255,255,255,.96);
+  border:2px solid var(--warn);
+  color:#000;
+  font-family: var(--tc);
+  text-transform:none;
+  letter-spacing:0;
+  padding:2px 6px;
+  outline:none;
+  min-width:40px;
+}
+
+.canvas-empty{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  color:var(--ink-3); font-size:calc(11px * var(--font-scale)); letter-spacing:.2em;
+}
+.canvas-empty .big{ font-size:calc(14px * var(--font-scale)); color:var(--ink-2); font-weight:700; letter-spacing:.3em; }
+
+.canvas-meta{
+  position:absolute; left:12px; bottom:8px;
+  color:var(--ink-3); font-size:calc(10px * var(--font-scale)); letter-spacing:.18em;
+  display:flex; gap:14px;
+  pointer-events:none;
+}
+
+/* STRIP 3 — GALLERY */
+.strip-gallery{
+  background:var(--bg-1);
+  padding:8px 12px;
+  display:flex; flex-direction:column; gap:6px;
+  border-bottom:1px solid var(--line);
+  min-height:0;
+}
+.strip-gallery .head{ display:flex; align-items:center; justify-content:space-between; }
+.strip-gallery h3{ font-size:calc(10px * var(--font-scale)); font-weight:700; letter-spacing:.22em; color:var(--ink-3); margin:0; }
+.strip-gallery .head .hint{ color:var(--ink-3); font-size:calc(10px * var(--font-scale)); letter-spacing:.16em; }
+
+.gallery{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+.gallery-item{
+  flex:0 0 auto;
+  width:84px; height:84px;
+  border:1px solid var(--line);
+  cursor:pointer;
+  position:relative;
+  background:#000;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  transition: border-color .12s ease;
+}
+.gallery-item:hover{ border-color:var(--ink); }
+.gallery-item.selected{ border-color:var(--ink); outline:1px solid var(--ink); outline-offset:-3px; }
+.gallery-item svg{ width:100%; height:100%; display:block; }
+.gallery-item .gtag{
+  position:absolute; left:0; bottom:0;
+  background:rgba(0,0,0,.55); color:#fff;
+  font-size:calc(9px * var(--font-scale)); letter-spacing:.18em; padding:2px 4px;
+}
+.gallery-item.user::after{
+  content:'USR'; position:absolute; right:2px; top:2px;
+  background:#fff; color:#000; font-size:calc(8px * var(--font-scale)); padding:1px 3px; letter-spacing:.1em;
+}
+.gallery-add{
+  flex:0 0 auto;
+  width:84px; height:84px;
+  border:1px dashed var(--line);
+  background:transparent;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer;
+  color:var(--ink-3);
+  gap:4px;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.gallery-add .plus{
+  font-size:calc(28px * var(--font-scale)); font-weight:300; line-height:1; letter-spacing:0;
+}
+.gallery-add .lbl{
+  font-size:calc(9px * var(--font-scale)); font-weight:600; letter-spacing:.18em;
+}
+.gallery-add:hover{ border-color:var(--ink); color:var(--ink); background:var(--bg-2); }
+
+/* HAMBURGER (legacy fixed selector kept for safety) & DEV PANEL */
+.devp{
+  position:fixed; top:0; right:0; bottom:0;
+  width:300px; max-width:90vw;
+  background:var(--bg-1);
+  border-left:1px solid var(--line);
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.2,.7,.2,1);
+  z-index:55;
+  display:flex; flex-direction:column;
+}
+.devp.open{ transform:translateX(0); }
+.devp-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid var(--line);
+}
+.devp-head h2{ margin:0; font-size:calc(11px * var(--font-scale)); font-weight:800; letter-spacing:.24em; }
+.devp-head .close{
+  width:20px; height:20px; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center;
+  font-size:calc(14px * var(--font-scale)); line-height:1;
+}
+.devp-body{ padding:14px 16px; overflow:auto; }
+.devp-section{
+  font-size:calc(9px * var(--font-scale));
+  font-weight:800; letter-spacing:.32em;
+  color:var(--ink-3);
+  padding:14px 0 8px;
+  margin-top:6px;
+  border-top:1px solid var(--line-soft);
+}
+.devp-section:first-child{ border-top:0; padding-top:0; margin-top:0; }
+.devp-hint{
+  margin-top:6px;
+  font-size:calc(9px * var(--font-scale));
+  color:var(--ink-3);
+  letter-spacing:.14em;
+}
+.ctl-btn{
+  width:100%;
+  padding:10px 12px;
+  font: inherit;
+  font-size:calc(11px * var(--font-scale));
+  font-weight:700;
+  letter-spacing:.2em;
+  border:1px solid var(--line);
+  background:var(--bg-2);
+  color:var(--ink-2);
+  cursor:pointer;
+}
+.ctl-btn:hover{ border-color:var(--ink); color:var(--ink); background:var(--bg-3); }
+.devp .ctl{ margin-bottom:14px; }
+.devp .ctl label{
+  display:flex; justify-content:space-between;
+  font-size:calc(10px * var(--font-scale)); font-weight:700; letter-spacing:.22em; color:var(--ink-3); margin-bottom:8px;
+}
+.devp .ctl label .val{ color:var(--ink); }
+.devp .seg{
+  display:grid; grid-template-columns:1fr 1fr; gap:0;
+  border:1px solid var(--line);
+}
+.devp .seg button{
+  border:0; padding:8px 10px; font-size:calc(11px * var(--font-scale)); font-weight:600;
+  background:transparent;
+}
+.devp .seg button.active{ background:var(--ink); color:var(--bg-0); }
+.devp input[type="range"]{ width:100%; accent-color:var(--ink); background:transparent; padding:0; border:0; }
+.devp input[type="color"]{ width:100%; height:32px; padding:2px; cursor:pointer; }
+.devp select{ width:100%; }
+
+/* MODAL */
+.modal-mask{
+  position:fixed; inset:0; background:rgba(0,0,0,.55);
+  display:none; align-items:center; justify-content:center; z-index:70;
+}
+.modal-mask.open{ display:flex; }
+.modal{
+  background:var(--bg-1); border:1px solid var(--line);
+  width:min(460px, 92vw); padding:20px;
+  box-shadow:var(--shadow);
+}
+.modal h3{ margin:0 0 12px; font-size:calc(13px * var(--font-scale)); font-weight:800; letter-spacing:.22em; }
+.modal p{ margin:0 0 14px; color:var(--ink-2); font-size:calc(11px * var(--font-scale)); letter-spacing:.12em; }
+.modal .choices{ display:grid; gap:8px; }
+.modal .choice{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; border:1px solid var(--line); cursor:pointer;
+  background:var(--bg-2);
+}
+.modal .choice:hover{ border-color:var(--ink); }
+.modal .choice .lbl{ font-weight:700; font-size:calc(12px * var(--font-scale)); letter-spacing:.18em; }
+.modal .choice .meta{ color:var(--ink-3); font-size:calc(10px * var(--font-scale)); letter-spacing:.18em; }
+.modal .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.modal .actions button{ padding:8px 14px; font-size:calc(11px * var(--font-scale)); font-weight:600; }
+.modal .actions button.primary{ background:var(--ink); color:var(--bg-0); border-color:var(--ink); }
+.modal .divider{
+  height:1px; background:var(--line); margin:14px 0;
+}
+.modal .add-row{
+  display:flex; gap:6px; align-items:center;
+}
+.modal .add-row input{ flex:1; font-family:var(--din); }
+.modal .add-row button{ height:34px; padding:0 12px; font-size:calc(11px * var(--font-scale)); font-weight:700; }
+.modal .add-label{
+  font-size:calc(10px * var(--font-scale)); font-weight:700; letter-spacing:.22em;
+  color:var(--ink-3); margin-bottom:6px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px){
+  .strip-work{ grid-template-columns: 1fr; }
+  .panel-l{ display:none; }
+  .panel-l.mobile-open{
+    display:flex;
+    position:absolute; top:52px; bottom:0;
+    width:280px; z-index:30;
+    border-right:1px solid var(--line);
+  }
+  .strip-tools button.mobile-toggle{ display:inline-flex; align-items:center; }
+}
+@media (min-width: 901px){
+  .strip-tools button.mobile-toggle{ display:none; }
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="app">
+
+  <nav class="strip-tools">
+    <button data-action="new">NEW...</button>
+    <button data-action="apply-size">APPLY SIZE...</button>
+    <button data-action="export">EXPORT...</button>
+    <span class="sep"></span>
+    <button data-action="reset">RESET</button>
+    <button class="mobile-toggle" data-action="toggle-layers">LAYERS</button>
+    <span class="file-name" id="fileName">— UNTITLED —</span>
+    <span class="tools-meta">
+      <span class="ver">v0.0.9</span>
+      <span class="dot"></span>
+      <span class="status">READY</span>
+    </span>
+    <button class="hamburger-inline" id="hamburger" aria-label="Toggle dev panel">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <section class="strip-work">
+    <aside class="panel panel-l" id="panelL">
+      <h3>
+        <span>LAYERS</span>
+        <span class="layer-actions">
+          <button class="mini-btn" data-action="add-text">+ TEXT</button>
+          <button class="mini-btn" data-action="add-svg">+ SVG</button>
+        </span>
+      </h3>
+      <div class="panel-body">
+        <ul class="layers" id="layersList"></ul>
+        <div class="layers-empty" id="layersEmpty">
+          NO COMPONENTS YET<br>
+          LOAD A TEMPLATE FROM THE GALLERY<br>
+          OR UPLOAD ONE
+        </div>
+
+        <div class="props-area">
+          <div class="ph">PROPERTIES · <span class="which" id="propWhich">—</span></div>
+          <div class="pbody" id="propBody">
+            <div class="props-empty">SELECT A LAYER TO EDIT ITS PROPERTIES.</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="canvas-area" id="canvasArea">
+      <div class="canvas-empty" id="canvasEmpty">
+        <div class="big">NO CANVAS</div>
+        <div>CLICK <b style="color:var(--ink-2)">NEW...</b> · OR DOUBLE-CLICK A TEMPLATE BELOW</div>
+      </div>
+      <div class="stage" id="stage" style="display:none">
+        <div class="canvas-bg"></div>
+        <div class="canvas-svg" id="canvasSvg"></div>
+        <div class="grid-overlay" id="gridOverlay"></div>
+        <div class="drag-overlay" id="dragOverlay"></div>
+      </div>
+      <div class="canvas-meta" id="canvasMeta"></div>
+    </div>
+  </section>
+
+  <section class="strip-gallery">
+    <div class="head">
+      <h3>TEMPLATES</h3>
+      <span class="hint">DOUBLE-CLICK TO USE</span>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+</div>
+
+<aside class="devp" id="devp" aria-hidden="true">
+  <div class="devp-head">
+    <h2>DEV PANEL</h2>
+    <button class="close" id="devpClose">×</button>
+  </div>
+  <div class="devp-body">
+
+    <div class="devp-section">THEME</div>
+    <div class="ctl">
+      <div class="seg" id="themeSeg">
+        <button data-theme="dark" class="active">DARK</button>
+        <button data-theme="light">LIGHT</button>
+      </div>
+    </div>
+
+    <div class="devp-section">TYPOGRAPHY</div>
+    <div class="ctl">
+      <label>UI FONT FAMILY</label>
+      <select id="ctrlFont">
+        <option value="'Barlow Condensed', 'DIN', sans-serif">BARLOW CONDENSED (DIN-LIKE)</option>
+        <option value="'Barlow', sans-serif">BARLOW</option>
+        <option value="'DIN', 'DIN Alternate', sans-serif">DIN (IF INSTALLED)</option>
+        <option value="ui-monospace, 'SF Mono', monospace">SYSTEM MONO</option>
+        <option value="'Noto Sans TC', sans-serif">NOTO SANS TC</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label>UI FONT SIZE <span class="val"><span id="fsVal">13</span>PX</span></label>
+      <input type="range" id="ctrlFontSize" min="11" max="20" step="1" value="13">
+      <div class="devp-hint">SCALES EVERY UI ELEMENT PROPORTIONALLY</div>
+    </div>
+    <div class="ctl">
+      <label>LETTER SPACING <span class="val"><span id="lsVal">0.06</span>EM</span></label>
+      <input type="range" id="ctrlLetterSpacing" min="0" max="20" step="1" value="6">
+      <div class="devp-hint">0.00 — 0.20 EM</div>
+    </div>
+
+    <div class="devp-section">COLORS</div>
+    <div class="ctl">
+      <label>PRIMARY INK <span class="val">TEXT &amp; ICONS</span></label>
+      <input type="color" id="ctrlInk" value="#f2f2f2">
+    </div>
+    <div class="ctl">
+      <label>SECONDARY INK <span class="val">LABELS</span></label>
+      <input type="color" id="ctrlInk2" value="#a8a8b0">
+    </div>
+    <div class="ctl">
+      <label>TERTIARY INK <span class="val">HINTS &amp; META</span></label>
+      <input type="color" id="ctrlInk3" value="#6f6f78">
+    </div>
+    <div class="ctl">
+      <label>ACCENT <span class="val">UNLOCK · WARN</span></label>
+      <input type="color" id="ctrlAccent" value="#f7b500">
+    </div>
+    <div class="ctl">
+      <label>SELECT <span class="val">ACTIVE LAYER</span></label>
+      <input type="color" id="ctrlSelect" value="#4a90e2">
+    </div>
+
+    <div class="devp-section">CANVAS</div>
+    <div class="ctl">
+      <label>OPERATION GRID OPACITY <span class="val"><span id="gaVal">30</span>%</span></label>
+      <input type="range" id="ctrlGridAlpha" min="0" max="100" step="1" value="30">
+    </div>
+    <div class="ctl">
+      <label>SNAP-TO-CENTER SENSITIVITY <span class="val"><span id="snapVal">18</span>PX</span></label>
+      <input type="range" id="ctrlSnap" min="0" max="80" step="1" value="18">
+      <div class="devp-hint">0 = OFF · HIGHER = STICKIER</div>
+    </div>
+
+    <div class="devp-section">RESET</div>
+    <div class="ctl">
+      <button id="ctrlResetUi" class="ctl-btn">RESET UI TO DEFAULTS</button>
+    </div>
+
+  </div>
+</aside>
+
+<!-- MODAL :: NEW (merged with +CANVAS SIZE) -->
+<div class="modal-mask" id="modalNew">
+  <div class="modal">
+    <h3>NEW CANVAS</h3>
+    <p>BLANK CANVAS. NO COMPONENTS LOADED. ADD A TEMPLATE LATER FROM THE GALLERY.</p>
+    <div class="choices" id="sizeChoicesNew"></div>
+    <div class="divider"></div>
+    <div class="add-label">ADD CUSTOM SIZE</div>
+    <div class="add-row">
+      <input type="number" id="addW" placeholder="W" min="100" max="6000" value="1080">
+      <input type="number" id="addH" placeholder="H" min="100" max="6000" value="1080">
+      <button data-action="confirm-add-size">ADD &amp; USE</button>
+    </div>
+    <div class="actions">
+      <button data-close-modal="modalNew">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL :: APPLY SIZE -->
+<div class="modal-mask" id="modalApplySize">
+  <div class="modal">
+    <h3>APPLY SIZE TO CURRENT</h3>
+    <p>RESIZE THE STAGE — CONTENT (TEMPLATE, BACKGROUND, TEXT) STAYS.</p>
+    <div class="choices" id="sizeChoicesApply"></div>
+    <div class="actions">
+      <button data-close-modal="modalApplySize">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL :: EXPORT -->
+<div class="modal-mask" id="modalExport">
+  <div class="modal">
+    <h3>EXPORT</h3>
+    <p>CHOOSE A FORMAT.</p>
+    <div class="choices">
+      <div class="choice" data-export="png"><span class="lbl">PNG · 150 DPI</span><span class="meta">NATIVE SIZE</span></div>
+      <div class="choice" data-export="html"><span class="lbl">HTML</span><span class="meta">900 × 900</span></div>
+      <div class="choice" data-export="svg"><span class="lbl">SVG</span><span class="meta">VECTOR</span></div>
+    </div>
+    <div class="actions">
+      <button data-close-modal="modalExport">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="bgFileInput" accept="image/*" hidden>
+<input type="file" id="tplFileInput" accept="image/svg+xml,.svg" hidden>
+<input type="file" id="compSvgInput" accept="image/svg+xml,.svg" hidden>
+
+<!-- LOCK ICONS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ico-lock" viewBox="0 0 16 16">
+    <rect x="3" y="7" width="10" height="7" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M5.5 7 V5 a2.5 2.5 0 0 1 5 0 V7" fill="none" stroke="currentColor" stroke-width="1.4"/>
+  </symbol>
+  <symbol id="ico-unlock" viewBox="0 0 16 16">
+    <rect x="3" y="7" width="10" height="7" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M5.5 7 V5 a2.5 2.5 0 0 1 5 0" fill="none" stroke="currentColor" stroke-width="1.4"/>
+  </symbol>
+</svg>
+
+<!-- ============================================================
+     TEMPLATE :: RACINGBROS TEST RIDE
+     Components wrapped in <g id="comp_*"> for move/resize
+     ============================================================ -->
+<template id="tpl_test_ride_01">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1200 1200">
+  <defs>
+    <style>
+      .pc-st-yel { fill: #fdb644; }
+      .pc-bg-default { fill: #000000; }
+      .pc-zh-bold {
+        font-family: 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+        font-weight: 700; fill: #fff;
+      }
+      .pc-zh-reg {
+        font-family: 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+        font-weight: 400; fill: #fff;
+      }
+      .pc-header-zh {
+        font-family: 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+        font-size: 31.19px; font-weight: 500; letter-spacing: .3em; fill: #fff;
+      }
+      .pc-din-num {
+        font-family: 'Barlow Condensed','DIN','DIN Alternate',sans-serif;
+        font-weight:700; fill:#fff;
+      }
+      .pc-din-time {
+        font-family: 'Barlow Condensed','DIN','DIN Alternate',sans-serif;
+        font-weight:800; fill:#000;
+      }
+    </style>
+    <filter id="bgBlur" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0"/>
+    </filter>
+  </defs>
+
+  <!-- BLACK BACKDROP (non-editable, behind everything) -->
+  <rect x="-5" y="-5" width="1210" height="1210"/>
+
+  <!-- COMPONENT :: BACKGROUND -->
+  <g id="comp_bg" transform="">
+    <g id="bgLayer" filter="url(#bgBlur)">
+      <rect id="bgRect" class="pc-bg-default" x="-5" y="-5" width="1210" height="814"/>
+    </g>
+    <rect id="bgFade" x="-5" y="-5" width="1210" height="814" fill="#000" opacity="0"/>
+  </g>
+
+  <!-- COMPONENT :: WHITE STRIP -->
+  <g id="comp_white_strip" transform="">
+    <rect x="-5" y="809" width="1210" height="173.43" fill="#fff"/>
+  </g>
+
+  <!-- COMPONENT :: LOGO (racingbros, bottom black strip) -->
+  <g id="comp_logo" transform="">
+    <g fill="#fff">
+      <path d="M522.37,1095.23c.69,0,1.03.31,1.03.92,0,.28-.09.59-.27.92l-2.14,3.67c-.28.51-.7.94-1.28,1.3-.57.35-1.1.53-1.59.53h-9.16c-.71,0-1.06-.31-1.06-.92,0-.28.09-.59.26-.91l1.07-1.84c.18-.33.26-.63.26-.91,0-.61-.34-.92-1.03-.92-.51,0-1.05.18-1.6.54-.56.35-1,.78-1.3,1.29l-8.5,14.64c-.28.52-.7.96-1.28,1.31-.57.36-1.09.54-1.58.54h-9.15c-.71,0-1.07-.3-1.07-.92,0-.27.09-.58.27-.92l9.54-16.49c.28-.5.71-.94,1.28-1.3.57-.36,1.11-.54,1.62-.54h25.68Z"/>
+      <path d="M554.7,1095.23c.69,0,1.03.31,1.03.92,0,.28-.09.59-.27.92l-9.54,16.49c-.28.51-.71.95-1.28,1.3-.57.35-1.1.54-1.58.54h-25.66c-.71,0-1.07-.3-1.07-.92,0-.27.09-.58.27-.92l4.24-7.34c.31-.5.74-.94,1.29-1.29.57-.36,1.1-.54,1.61-.54h12.83c.51,0,1.05-.18,1.61-.53.56-.36,1-.78,1.3-1.3l2.11-3.65c.16-.33.24-.64.24-.92,0-.62-.34-.92-1.03-.92-.51,0-1.03.18-1.59.54s-.99.8-1.29,1.31l-1.07,1.84c-.28.5-.71.93-1.28,1.28-.58.36-1.11.53-1.59.53h-9.19c-.72,0-1.07-.31-1.07-.92,0-.28.09-.59.27-.91l2.13-3.67c.28-.5.71-.94,1.28-1.3.57-.36,1.11-.54,1.62-.54h25.68ZM536.28,1108.06c.18-.33.27-.64.27-.92,0-.61-.35-.92-1.07-.92-.51,0-1.04.19-1.6.54-.56.35-.98.79-1.26,1.3l-2.14,3.67c-.18.34-.26.64-.26.92,0,.61.34.92,1.03.92.51,0,1.05-.18,1.62-.53.57-.36,1-.79,1.28-1.3l2.13-3.67h0Z"/>
+      <path d="M573.43,1102.56c-.71,0-1.07-.31-1.07-.92,0-.28.09-.59.27-.91l1.07-1.84c.18-.33.27-.63.27-.91,0-.61-.35-.92-1.03-.92-.5,0-1.04.18-1.6.54-.56.35-.99.79-1.3,1.3l-7.41,12.83c-.18.33-.27.63-.27.91,0,.61.34.92,1.03.92.51,0,1.06-.18,1.62-.53.57-.36,1-.79,1.28-1.3l3.17-5.49c.31-.51.74-.95,1.3-1.3.56-.36,1.1-.54,1.6-.54h9.16c.72,0,1.07.31,1.07.92,0,.29-.1.59-.3.91l-4.24,7.34c-.27.51-.7.95-1.27,1.3-.58.35-1.1.54-1.59.54h-25.66c-.72,0-1.07-.3-1.07-.92,0-.27.09-.58.26-.92l9.55-16.49c.27-.5.7-.94,1.28-1.3.57-.36,1.11-.54,1.62-.54h25.65c.68,0,1.04.31,1.04.92,0,.28-.09.59-.27.92l-2.14,3.67c-.28.51-.7.94-1.27,1.3-.57.35-1.1.53-1.59.53h-9.16v-.02Z"/>
+      <path d="M581.86,1115.4c-.72,0-1.07-.3-1.07-.92,0-.27.09-.58.26-.92l9.55-16.49c.28-.5.71-.94,1.28-1.3.57-.36,1.11-.54,1.62-.54h9.16c.68,0,1.03.31,1.03.92,0,.28-.09.59-.27.92l-9.54,16.49c-.28.51-.71.95-1.28,1.3-.57.35-1.1.54-1.59.54h-9.16.01Z"/>
+      <path d="M634.99,1095.23c.69,0,1.04.31,1.04.92,0,.28-.09.59-.27.92l-9.55,16.49c-.28.51-.71.95-1.27,1.3-.58.35-1.1.54-1.59.54h-9.17c-.71,0-1.07-.3-1.07-.92,0-.27.09-.58.27-.92l8.48-14.66c.18-.33.27-.63.27-.91,0-.61-.34-.92-1.03-.92-.51,0-1.05.18-1.61.54-.56.35-.99.79-1.3,1.3l-8.48,14.65c-.27.51-.7.95-1.27,1.3-.58.35-1.1.54-1.59.54h-9.16c-.72,0-1.07-.3-1.07-.92,0-.27.09-.58.26-.92l9.54-16.49c.27-.5.7-.94,1.27-1.3.58-.36,1.12-.54,1.63-.54h25.67Z"/>
+      <path d="M643.35,1119.78c-.15-.27-.23-.64-.23-1.07,0-.64.16-1.21.46-1.72.13-.25.19-.49.19-.72,0-.59-.37-.88-1.11-.88h-12.83c-.71,0-1.07-.3-1.07-.92,0-.27.09-.58.27-.92l9.55-16.49c.28-.5.71-.94,1.28-1.3.57-.36,1.11-.54,1.62-.54h25.65c.69,0,1.04.31,1.04.92,0,.28-.09.59-.27.92l-2.14,3.67c-.28.51-.71.94-1.27,1.3-.58.36-1.1.53-1.58.53h-9.17c-.71,0-1.07-.31-1.07-.92,0-.28.09-.59.27-.91l1.05-1.84c.19-.33.28-.64.28-.91,0-.61-.34-.92-1.04-.92-.5,0-1.04.18-1.6.54-.55.35-.99.78-1.3,1.29l-7.4,12.83c-.18.34-.27.64-.27.92,0,.61.34.92,1.03.92.51,0,1.05-.18,1.62-.53.57-.36.99-.79,1.27-1.3l3.17-5.5c.31-.5.74-.94,1.31-1.29.56-.36,1.09-.54,1.6-.54h9.16c.71,0,1.07.31,1.07.92,0,.29-.1.59-.31.91l-12.4,21.54c-.38.66-.79,1-1.23,1-.22,0-.4-.13-.53-.38l-5.08-8.6h.01Z"/>
+      <path d="M699.83,1095.23c.69,0,1.04.31,1.04.92,0,.28-.09.59-.26.92l-9.55,16.49c-.28.51-.71.95-1.27,1.3-.57.35-1.1.54-1.59.54h-25.65c-.72,0-1.07-.3-1.07-.92,0-.27.09-.58.27-.91l17.74-30.69c.38-.66.78-.99,1.19-.99.24,0,.42.11.57.34l5.08,8.63c.15.25.23.61.23,1.04,0,.64-.15,1.22-.46,1.75-.16.26-.23.49-.23.73,0,.59.37.87,1.14.87h12.82v-.02h0ZM686.71,1098.9c.18-.33.27-.63.27-.91,0-.61-.35-.92-1.04-.92-.5,0-1.04.18-1.6.54-.56.35-.99.79-1.3,1.3l-7.4,12.83c-.18.33-.27.63-.27.91,0,.61.35.92,1.03.92.51,0,1.05-.18,1.62-.53.57-.36,1-.79,1.28-1.3l7.4-12.83h0Z"/>
+      <path d="M732.94,1095.23c.69,0,1.02.31,1.02.92,0,.28-.09.59-.27.92l-2.14,3.67c-.28.51-.7.94-1.28,1.3-.57.35-1.11.53-1.6.53h-9.15c-.72,0-1.07-.31-1.07-.92,0-.28.09-.59.27-.91l1.07-1.84c.18-.33.26-.63.26-.91,0-.61-.34-.92-1.03-.92-.51,0-1.04.18-1.61.54-.56.35-.99.78-1.29,1.29l-8.5,14.64c-.29.52-.7.96-1.28,1.31-.57.36-1.1.54-1.58.54h-9.15c-.71,0-1.06-.3-1.06-.92,0-.27.08-.58.26-.92l9.55-16.49c.28-.5.7-.94,1.28-1.3.57-.36,1.11-.54,1.62-.54h25.68Z"/>
+      <path d="M764.89,1095.23c.68,0,1.03.31,1.03.92,0,.28-.09.59-.26.92l-9.54,16.49c-.29.51-.72.95-1.28,1.3-.58.35-1.1.54-1.59.54h-25.65c-.72,0-1.07-.3-1.07-.92,0-.27.09-.58.26-.91l9.54-16.49c.28-.5.71-.94,1.28-1.3.58-.36,1.12-.54,1.62-.54h25.66ZM751.75,1098.9c.18-.33.27-.63.27-.91,0-.61-.35-.92-1.03-.92-.51,0-1.04.18-1.59.54-.56.35-.99.79-1.31,1.3l-7.4,12.83c-.17.33-.27.63-.27.91,0,.61.35.92,1.03.92.51,0,1.05-.18,1.62-.53.58-.36,1-.79,1.28-1.3l7.4-12.83h0Z"/>
+      <path d="M784.57,1102.56c-.71,0-1.06-.31-1.06-.92,0-.28.08-.59.27-.91l1.06-1.84c.18-.33.27-.63.27-.91,0-.61-.35-.92-1.03-.92-.51,0-1.05.18-1.61.54-.56.35-.99.78-1.3,1.29l-2.13,3.65c-.18.34-.27.65-.27.93,0,.61.36.92,1.06.92h12.83c.71,0,1.07.31,1.07.92,0,.29-.11.59-.31.91l-4.24,7.34c-.27.51-.7.95-1.28,1.3-.57.35-1.1.54-1.59.54h-25.65c-.71,0-1.07-.3-1.07-.92,0-.27.1-.58.27-.92l2.14-3.66c.28-.51.71-.94,1.28-1.3.58-.35,1.11-.53,1.62-.53h9.16c.69,0,1.04.31,1.04.92,0,.28-.09.59-.27.92l-1.07,1.83c-.17.34-.26.64-.26.92,0,.61.35.92,1.04.92.51,0,1.04-.18,1.61-.53.58-.36,1.01-.79,1.29-1.3l2.14-3.66c.17-.33.26-.64.26-.92,0,-.61-.35-.92-1.06-.92h-12.82c-.69,0-1.04-.29-1.04-.91,0-.27.09-.58.27-.92l4.24-7.33c.28-.5.71-.94,1.28-1.3.58-.36,1.11-.54,1.63-.54h25.65c.68,0,1.03.31,1.03.92,0,.28-.09.59-.26.92l-2.14,3.67c-.28.51-.71.94-1.28,1.3-.57.35-1.1.53-1.58.53h-9.17l-.02-.03h0Z"/>
+      <path d="M444.78,1105.78c-.64,0-1.34.23-2.07.69-.75.48-1.32,1.04-1.69,1.72l-9.75,16.82c-.27.43-.43.83-.43,1.2,0,.79.48,1.19,1.43,1.19.65,0,1.37-.23,2.09-.7.74-.46,1.3-1.04,1.71-1.7l9.76-16.82c.23-.44.35-.84.35-1.2,0-.81-.48-1.2-1.4-1.2Z"/>
+      <path d="M461.74,1071.93h-54.64c-3.37,0-6.1,2.73-6.1,6.1v54.64c0,3.37,2.73,6.1,6.1,6.1h54.64c3.37,0,6.1-2.73,6.1-6.1v-54.64c0-3.37-2.73-6.1-6.1-6.1ZM464,1105.78l-12.53,21.63c-.36.67-.92,1.25-1.66,1.71-.77.47-1.48.69-2.15.69h-33.66c-.9,0-1.35-.39-1.35-1.2,0-.37.13-.76.36-1.2l23.32-40.25c.04-.06.09-.13.12-.19l1.19-2.04c.25-.44.37-.83.37-1.2,0-.81-.47-1.2-1.42-1.2-.63,0-1.32.23-2.06.7-.75.48-1.31,1.04-1.68,1.7l-11.18,19.22c-.36.68-.92,1.24-1.68,1.71-.75.47-1.46.7-2.13.7h-12.01c-.91,0-1.35-.4-1.35-1.21,0-.36.12-.76.36-1.2l12.52-21.65c.41-.65.98-1.23,1.71-1.69.73-.48,1.43-.71,2.11-.71h33.66c.94,0,1.4.4,1.4,1.19,0,.39-.13.79-.4,1.2l-2.76,4.83c-.37.67-.93,1.24-1.69,1.69-.75.48-1.47.71-2.12.71h-8.61l4.63,7.88c.2.33.3.79.3,1.35,0,.83-.22,1.6-.61,2.3-.17.32-.26.65-.26.95,0,.56.28.92.82,1.08.18.04.39.07.63.07h16.83c.95,0,1.4.39,1.4,1.21,0,.35-.13.76-.4,1.2l-.02.02h0Z"/>
+    </g>
+  </g>
+
+  <!-- COMPONENT :: SLOGAN BIG (感受) -->
+  <g id="comp_slogan_big" transform="">
+    <g fill="#fff">
+      <path d="M620.9,403.92v12.71c0,26.71-4.09,64.63-24.77,89.2-3.66-4.53-13.79-12.93-18.75-15.73,17.88-21.54,19.82-51.92,19.82-73.9v-32.75h89.41c-.86-6.89-1.51-14-1.72-21.11l30.59,1.29c0,2.15-1.94,3.45-5.82,4.09.22,5.17.43,10.56,1.08,15.73h23.05c-4.53-3.02-9.48-6.03-14-8.4l14.87-13.14c8.83,3.88,19.61,10.34,24.99,15.73l-6.46,5.82h22.62v20.47h-61.83c2.37,12.28,5.82,23.91,9.91,34.04,5.17-8.83,9.7-18.53,12.93-28.44l27.58,7.76c-.65,1.72-2.8,2.8-5.82,2.59-5.82,15.08-13.36,29.3-22.41,42.01,5.82,8.4,12.06,13.57,18.1,13.57,5.39,0,7.54-7.32,8.62-26.07,5.17,4.96,12.93,9.48,19.17,11.63-3.66,30.38-11.42,37.92-28.44,37.92-12.93,0-23.27-6.25-33.39-18.31-7.97,8.4-17.02,15.51-26.5,21.54-3.66-4.74-11.64-12.93-16.59-17.02,1.29-.86,2.59-1.51,4.09-2.37h-35.12v7.32h-20.68v-53.86h61.83v42.44c7.32-5.17,14-11.42,20.25-18.31-7.97-15.73-14-35.33-17.88-56.45h-68.73,0ZM630.59,512.72c-5.82,18.96-14.43,36.84-31.02,47.83l-21.11-14.87c14.44-9.26,24.35-24.35,29.09-40.93l23.05,7.97h-.01ZM688.33,411.89v16.59h-63.77v-16.59h63.77ZM661.83,533.41c0,6.03,1.51,6.68,10.99,6.68h27.58c7.54,0,8.83-2.15,9.91-17.67,4.95,3.88,15.94,7.54,22.62,9.05-2.8,25.42-10.13,31.67-30.16,31.67h-32.96c-27.36,0-33.61-7.11-33.61-29.3v-27.58l25.64,1.51c-3.45-2.59-6.68-4.96-9.91-6.89l17.24-13.36c12.06,6.89,26.71,18.1,33.61,26.72l-18.1,14.87c-3.88-5.39-10.99-12.07-18.96-18.31-.86.65-2.15,1.08-3.88,1.29v21.33h-.01ZM666.14,466.4v-13.57h-20.04v13.57h20.04ZM758.78,559.04c-5.82-13.36-21.33-32.1-36.19-45.24l21.11-11.85c15.08,12.5,31.24,30.16,37.92,43.95l-22.84,13.14h0Z"/>
+      <path d="M966.05,475.66c-.65.65-1.51,1.08-2.37,1.51-9.48,19.82-23.05,35.76-39.64,48.69,21.11,7.32,45.67,12.06,72.82,14.65-5.82,6.25-12.93,18.1-16.8,25.42-32.1-4.09-59.89-11.63-83.59-23.27-23.27,11.42-50.2,18.74-79.5,23.27-2.8-6.68-10.34-18.53-15.94-24.13,25.21-2.8,48.69-7.76,68.94-15.3-12.5-9.26-23.48-20.25-32.75-33.18l17.88-7.11h-22.62v-22.41h111.17l4.74-1.08,17.67,9.91v-25.64h-140.69v28.65h-24.13v-51.06h30.16c-2.15-6.25-5.82-14-9.26-20.04l18.31-5.17c-10.56.43-21.11.86-31.46,1.08-.43-6.25-3.45-16.16-5.82-21.76,57.31-1.94,122.59-7.11,162.23-15.08l18.1,21.97c-.86.43-1.94.65-3.23.65-.86,0-1.94-.22-3.02-.43-34.9,6.25-84.24,10.99-131.85,13.36,4.95,7.76,9.91,17.67,11.85,24.56l-3.02.86h31.45c-1.51-7.11-4.31-16.37-7.76-23.91l23.05-5.17c4.31,8.62,8.62,20.04,9.7,27.36l-6.89,1.72h29.3c5.6-9.91,11.63-22.62,14.87-32.53l30.59,9.26c-.86,1.72-3.02,2.37-6.03,2.37-3.23,6.25-7.76,13.79-12.28,20.9h31.24v51.06h-25.42v.02ZM862.63,486.22c8.62,10.77,20.04,20.04,34.04,27.58,12.28-7.54,22.62-16.59,30.38-27.58h-64.42Z"/>
+    </g>
+  </g>
+
+  <!-- COMPONENT :: SLOGAN SUB (就知道不同) — full 5 chars -->
+  <g id="comp_slogan_sub" transform="">
+    <g fill="#fff">
+      <path d="M584.11,639.03c-.3.74-.96.89-1.77.81-1.62,5.83-4.35,12.4-7.75,16.53-1.25-1.48-3.98-4.21-5.68-5.54,2.66-3.39,4.65-9.08,5.76-14.47l9.45,2.66h-.01ZM607.21,599.84v8.19h-37.42v-8.19h14.47v-9.3l11,.52c-.07.81-.59,1.18-1.99,1.48v7.31h13.95-.01ZM628.32,650.17c0,2.21.07,2.8,1.25,2.8,2.07,0,2.36,0,2.73-.3.89-.89.89-6.72.89-10.41,1.48,1.33,4.28,2.73,6.27,3.39-.22,9.82-.81,14.54-7.97,14.54h-4.36c-1.77,0-3.84-.66-5.16-1.92-1.4-1.25-1.92-2.95-1.92-8.34v-13.8c-2.29,8.86-6.35,17.42-13.43,24.21-1.62-1.62-5.24-4.13-7.53-5.24,2.51-2.21,4.58-4.72,6.27-7.31l-5.9,3.17c-1.26-3.1-3.91-7.9-6.42-11.44v11.81c0,7.16-2.58,8.86-12.47,8.86-.3-2.44-1.48-5.9-2.58-8.12,2.29.07,4.65.07,5.39.07.81-.07,1.03-.3,1.03-.96v-17.05h-10.33v-22.44h29v22.44h-10.04v5.31l6.86-3.32c2.44,3.1,5.02,7.16,6.42,10.11,5.54-9.08,7.23-19.7,7.75-28.86h-7.82v-8.41h8.04v-18.45l10.63.52c-.07.74-.66,1.18-1.99,1.4v16.53h16.09v8.41h-16.31c0,1.11-.07,2.14-.15,3.25,2.8.22,5.24.3,7.68.44-.07.74-.59,1.18-1.92,1.33v27.78ZM582.27,619.25v7.45h12.03v-7.45h-12.03ZM631.34,592.16c3.32,3.47,6.35,8.34,7.68,11.81l-7.38,3.62c-1.11-3.47-4.06-8.63-7.16-12.33l6.86-3.1Z"/>
+      <path d="M685.45,608.18v10.04c0,.89,0,1.77-.07,2.73h11.37v8.41h-12.03c-.22,1.48-.52,2.95-.81,4.43,3.62,3.69,11,11.73,12.84,13.88l-5.76,7.23c-2.21-3.4-6.27-8.49-9.67-12.69-2.58,6.57-6.79,12.84-13.28,17.64-1.11-1.77-4.28-5.17-5.9-6.35,9.15-6.72,12.69-15.65,14.1-24.13h-13.8v-8.41h14.47c.07-.96.07-1.92.07-2.88v-9.89h-3.69c-1.48,4.13-3.17,7.97-5.16,10.92-1.48-1.33-4.5-3.54-6.42-4.65,3.54-5.46,6.2-14.91,7.6-23.84l9.67,2.29c-.22.66-.81.96-1.85.96-.37,1.99-.89,4.06-1.4,6.13h19.78v8.19h-10.06ZM699.4,596.96h28.86v60h-9.08v-4.28h-11.22v5.39h-8.56v-61.11ZM707.96,644.34h11.22v-39.04h-11.22v39.04Z"/>
+      <path d="M772.47,619.47v23.47c4.58,7.45,13.51,7.45,26.42,7.45,8.49,0,18.52-.22,25.39-.81-.96,2.14-2.36,6.42-2.8,9-5.46.3-13.14.44-20.37.44-16.53,0-25.39,0-32.55-8.49-3.25,2.88-6.57,5.76-9.37,7.97,0,.81-.3,1.25-1.03,1.48l-4.5-9.74c3.17-1.92,6.94-4.35,10.18-6.94v-15.65h-8.63v-8.19h17.27-.01ZM761.84,592.31c4.5,3.1,9.96,7.68,12.47,11.22l-7.01,5.9c-2.29-3.54-7.6-8.49-12.03-11.81l6.57-5.31h0ZM780.73,611.35h11.14c.37-1.25.66-2.58.89-3.91h-17.86v-7.16h10.78c-1.03-2.21-2.58-4.8-4.21-6.79l6.86-2.88c2.29,2.66,4.72,6.35,5.61,8.93l-1.7.74h10.63l-.96-.37c1.7-2.73,3.62-6.57,4.72-9.37l9.96,2.73c-.3.59-.89.81-1.99.89-1.18,1.77-2.95,4.13-4.65,6.13h12.47v7.16h-20.52c-.52,1.25-1.11,2.58-1.7,3.91h16.16v36.46h-8.78v-1.62h-18.45v1.62h-8.41v-36.46h.01ZM807.6,621.24v-3.39h-18.45v3.39h18.45ZM789.15,627v3.47h18.45v-3.47h-18.45ZM789.15,639.77h18.45v-3.54h-18.45v3.54Z"/>
+      <path d="M885.69,624.41l5.61-5.54c7.75,4.72,19.04,12.03,24.5,16.98l-7.09,7.45c-4.8-4.87-15.06-12.25-23.03-17.42v34.32h-9.23v-36.02c-6.72,7.68-14.91,14.69-24.28,19.85-1.25-2.21-4.13-5.76-5.83-7.68,14.02-7.09,25.76-19.63,32.62-31.88h-29.96v-8.93h64.65v8.93h-23.62c-1.55,2.95-3.32,5.9-5.24,8.86l2.95.66c-.15.66-.74,1.25-2.07,1.4v9l.02.02Z"/>
+      <path d="M1005.33,594.08v55.94c0,8.86-3.76,10.26-16.98,10.26-.3-2.43-1.7-6.49-2.95-8.78,2.51.15,5.09.22,7.01.22,3.76,0,4.21,0,4.21-1.77v-47.46h-45.9v57.71h-8.56v-66.13h63.18-.01ZM992.12,607.66v7.45h-37.05v-7.45h37.05ZM988.42,645.45h-21.77v5.02h-8.12v-29.96h29.89v24.95h0ZM980.23,627.81h-13.58v10.33h13.58v-10.33Z"/>
+    </g>
+  </g>
+
+  <!-- COMPONENT :: SHOP NAME (editable, centered, default BLACK on white strip) -->
+  <g id="comp_shop" transform="">
+    <text id="textShop" class="pc-zh-bold" x="600" y="878.6" text-anchor="middle" font-size="41.67" style="letter-spacing:.07em; fill:#000;">新竹 | 炫鋒車業</text>
+  </g>
+
+  <!-- COMPONENT :: LOCATION (editable, centered, default BLACK on white strip) -->
+  <g id="comp_location" transform="">
+    <text id="textLocation" class="pc-zh-reg" x="600" y="944.6" text-anchor="middle" font-size="41.67" style="letter-spacing:.07em; fill:#000;">新竹縣竹東鎮公道路958-2號</text>
+  </g>
+
+  <!-- COMPONENT :: DATE BOX (outline only) -->
+  <g id="comp_date_box" transform="">
+    <path fill="#fff" d="M522.16,680.68H194.46v-327.7h327.7v327.7h0ZM202.5,672.64h311.61v-311.61H202.5v311.61Z"/>
+  </g>
+
+  <!-- COMPONENT :: DATE (5/30) — slash is now a thin LINE -->
+  <g id="comp_date" transform="">
+    <text id="textDateA" class="pc-din-num" x="226" y="510" font-size="200">5</text>
+    <line id="textDateSlash" x1="400" y1="395" x2="305" y2="685" stroke="#fff" stroke-width="5" stroke-linecap="butt"/>
+    <text id="textDateB" class="pc-din-num" x="370" y="680" font-size="200">30</text>
+  </g>
+
+  <!-- COMPONENT :: CIRCLE (yellow disc) -->
+  <g id="comp_circle" transform="">
+    <circle class="pc-st-yel" cx="246" cy="625.22" r="92"/>
+  </g>
+
+  <!-- COMPONENT :: SESSION (週六下午, editable, centered in circle) -->
+  <g id="comp_session" transform="">
+    <text id="textSession" font-family="'Noto Sans TC',sans-serif" font-weight="700" font-size="35.49" fill="#000" x="246" y="615" text-anchor="middle" style="letter-spacing:-.03em">週六下午</text>
+  </g>
+
+  <!-- COMPONENT :: TIME (16:00, editable, centered in circle) -->
+  <g id="comp_time" transform="">
+    <text id="textTime" class="pc-din-time" x="246" y="672" font-size="56" text-anchor="middle">16:00</text>
+  </g>
+
+  <!-- COMPONENT :: HEADER LINE (邀您蒞臨 RACINGBROS 品牌講座) -->
+  <g id="comp_header" transform="">
+    <text class="pc-header-zh" transform="translate(312.7 273.67)"><tspan x="0" y="0" xml:space="preserve">邀您蒞臨                品牌講座</tspan></text>
+    <g fill="#fff">
+      <path d="M498.35,276.2l-5.68-8.49h-4.59v8.49h-5.83v-26.52h12.12c6.25,0,10,3.29,10,8.75v.07c0,4.28-2.31,6.97-5.68,8.22l6.48,9.47h-6.82ZM498.46,258.73c0-2.5-1.74-3.79-4.58-3.79h-5.8v7.61h5.91c2.84,0,4.47-1.51,4.47-3.75v-.07h0Z"/>
+      <path d="M526.1,276.2l-2.42-5.95h-11.21l-2.42,5.95h-5.95l11.36-26.71h5.38l11.36,26.71h-6.1ZM518.07,256.49l-3.52,8.6h7.04l-3.52-8.6h0Z"/>
+      <path d="M544.28,276.65c-7.8,0-13.6-6.02-13.6-13.64v-.08c0-7.54,5.68-13.71,13.83-13.71,5,0,7.99,1.67,10.45,4.09l-3.71,4.28c-2.05-1.86-4.13-2.99-6.78-2.99-4.47,0-7.69,3.72-7.69,8.26v.07c0,4.55,3.14,8.34,7.69,8.34,3.03,0,4.89-1.21,6.97-3.11l3.71,3.75c-2.73,2.91-5.76,4.73-10.87,4.73h0Z"/>
+      <path d="M559.25,276.2v-26.52h5.83v26.52h-5.83Z"/>
+      <path d="M587.48,276.2l-12.84-16.86v16.86h-5.76v-26.52h5.38l12.43,16.33v-16.33h5.76v26.52h-4.97Z"/>
+      <path d="M609.27,276.65c-8.26,0-13.94-5.79-13.94-13.64v-.08c0-7.54,5.87-13.71,13.9-13.71,4.77,0,7.65,1.29,10.42,3.64l-3.68,4.43c-2.05-1.7-3.86-2.69-6.93-2.69-4.24,0-7.62,3.75-7.62,8.26v.07c0,4.85,3.33,8.41,8.03,8.41,2.12,0,4.01-.53,5.49-1.59v-3.79h-5.87v-5.04h11.52v11.52c-2.73,2.31-6.48,4.21-11.33,4.21h0Z"/>
+      <path d="M636.38,276.2h-12.62v-26.52h12.31c5.42,0,8.75,2.69,8.75,6.86v.07c0,2.99-1.59,4.66-3.49,5.72,3.07,1.18,4.96,2.96,4.96,6.52v.07c0,4.85-3.94,7.27-9.93,7.27h.02ZM639.03,257.52c0-1.74-1.36-2.73-3.83-2.73h-5.76v5.61h5.38c2.58,0,4.21-.83,4.21-2.8v-.07h0ZM640.51,268.13c0-1.78-1.33-2.88-4.32-2.88h-6.74v5.83h6.93c2.58,0,4.13-.91,4.13-2.88v-.07h0Z"/>
+      <path d="M664.38,276.2l-5.68-8.49h-4.59v8.49h-5.83v-26.52h12.12c6.25,0,10,3.29,10,8.75v.07c0,4.28-2.31,6.97-5.68,8.22l6.48,9.47h-6.82,0ZM664.5,258.73c0-2.5-1.74-3.79-4.58-3.79h-5.8v7.61h5.91c2.84,0,4.47-1.51,4.47-3.75v-.07h0Z"/>
+      <path d="M685.73,276.65c-8.18,0-14.05-6.1-14.05-13.64v-.08c0-7.54,5.95-13.71,14.13-13.71s14.05,6.1,14.05,13.64v.07c0,7.54-5.95,13.71-14.13,13.71h0ZM693.76,262.94c0-4.54-3.34-8.33-8.03-8.33s-7.96,3.72-7.96,8.26v.07c0,4.55,3.33,8.34,8.03,8.34s7.96-3.72,7.96-8.26v-.08Z"/>
+      <path d="M711.47,276.58c-4.02,0-8.07-1.4-11.25-4.24l3.45-4.13c2.39,1.97,4.89,3.22,7.92,3.22,2.39,0,3.83-.94,3.83-2.5v-.07c0-1.48-.91-2.23-5.34-3.37-5.34-1.36-8.79-2.84-8.79-8.11v-.08c0-4.81,3.86-7.99,9.28-7.99,3.86,0,7.16,1.21,9.85,3.37l-3.03,4.39c-2.35-1.63-4.66-2.61-6.89-2.61s-3.41,1.02-3.41,2.31v.07c0,1.74,1.14,2.31,5.72,3.48,5.38,1.4,8.41,3.34,8.41,7.96v.07c0,5.27-4.01,8.22-9.73,8.22h-.02Z"/>
+    </g>
+  </g>
+</svg>
+</template>
+
+<script>
+/* ============================================================
+   PROJECT-PC :: v0.0.3
+   ============================================================ */
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+const TEMPLATES = {
+  test_ride_01: {
+    id:'test_ride_01',
+    label:'RACINGBROS TEST RIDE',
+    nativeW:1200, nativeH:1200,
+    source:'builtin',
+    tplId:'tpl_test_ride_01'
+  }
+};
+
+/* Component registry — order matches z-index (later = on top).
+   Detection: if the loaded SVG has the comp ID, it becomes a layer. */
+const COMPONENT_DEFS = [
+  { id:'comp_bg',          name:'BACKGROUND',          kind:'bg' },
+  { id:'comp_white_strip', name:'WHITE STRIP',          kind:'shape' },
+  { id:'comp_logo',        name:'LOGO',                 kind:'shape' },
+  { id:'comp_slogan_big',  name:'SLOGAN — 感受',        kind:'shape' },
+  { id:'comp_slogan_sub',  name:'SLOGAN — 就知道不同',  kind:'shape' },
+  { id:'comp_shop',        name:'SHOP NAME',            kind:'text',  field:'shop',     textId:'textShop' },
+  { id:'comp_location',    name:'LOCATION',             kind:'text',  field:'location', textId:'textLocation' },
+  { id:'comp_date_box',    name:'DATE BOX',             kind:'shape' },
+  { id:'comp_date',        name:'DATE',                 kind:'text',  field:'date',     textId:'textDateA' },
+  { id:'comp_circle',      name:'CIRCLE',               kind:'shape' },
+  { id:'comp_session',     name:'SESSION',              kind:'text',  field:'session',  textId:'textSession' },
+  { id:'comp_time',        name:'TIME',                 kind:'text',  field:'time',     textId:'textTime' },
+  { id:'comp_header',      name:'HEADER LINE',          kind:'shape' },
+];
+
+const state = {
+  canvas: null,
+  templateId: null,
+  bgDataUrl: null,
+  bgFade: 0,
+  bgBlur: 0,
+  sizes: [
+    {w:1200,h:1200,label:'SQUARE'},
+    {w:1080,h:1350,label:'PORTRAIT 4:5'},
+    {w:1080,h:1920,label:'STORY 9:16'}
+  ],
+  fields: {
+    date:'5/30', time:'16:00', session:'週六下午',
+    shop:'新竹 | 炫鋒車業', location:'新竹縣竹東鎮公道路958-2號'
+  },
+  components: [],         // active components for current template
+  locks: {},
+  transforms: {},         // {compId: {tx, ty, scale}}
+  origBBoxes: {},         // {compId: {x,y,w,h,cx,cy}}
+  colors: {},             // {compId: '#hex'} — user picks
+  originalColors: {},     // {compId: '#hex'} — captured at load time
+  activeLayer: null,
+  /* SNAP — sensitivity in SVG units (0 = off). Toggleable via devp. */
+  snapSensitivity: 18,
+  snapState: { x:false, y:false }
+};
+
+/* Default per-component scale and translate on first load */
+const DEFAULT_SCALE = {
+  comp_date: 0.8
+};
+const DEFAULT_TRANSLATE = {
+  comp_date: { tx:-25, ty:0 }
+};
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+const canvasArea = $('#canvasArea');
+const stage      = $('#stage');
+const canvasSvgWrap = $('#canvasSvg');
+const canvasEmpty   = $('#canvasEmpty');
+const canvasMeta    = $('#canvasMeta');
+const fileNameEl    = $('#fileName');
+const dragOverlay   = $('#dragOverlay');
+
+/* ---------- SIZING ---------- */
+function fitStage(){
+  if(!state.canvas) return;
+  const pad = 24;
+  const aw = canvasArea.clientWidth - pad*2;
+  const ah = canvasArea.clientHeight - pad*2;
+  const scale = Math.min(aw / state.canvas.w, ah / state.canvas.h, 1);
+  stage.style.width  = (state.canvas.w * scale) + 'px';
+  stage.style.height = (state.canvas.h * scale) + 'px';
+  renderDragOverlay();
+}
+window.addEventListener('resize', fitStage);
+
+/* ---------- CANVAS LIFECYCLE ---------- */
+function startCanvas(w, h){
+  state.canvas = { w, h };
+  state.templateId = null;
+  state.components = [];
+  state.locks = {};
+  state.transforms = {};
+  state.origBBoxes = {};
+  state.colors = {};
+  state.originalColors = {};
+  state.activeLayer = null;
+  state.bgDataUrl = null;
+  state.bgFade = 0;
+  state.bgBlur = 0;
+
+  stage.style.display = '';
+  canvasEmpty.style.display = 'none';
+  canvasMeta.innerHTML = `<span>${w} × ${h} PX</span><span>150 DPI</span>`;
+  fileNameEl.textContent = `UNTITLED · ${w}×${h}`;
+  canvasSvgWrap.innerHTML = '';
+  /* Create an empty SVG so user-added components have a host */
+  const blank = document.createElementNS(SVG_NS, 'svg');
+  blank.setAttribute('xmlns', SVG_NS);
+  blank.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  canvasSvgWrap.appendChild(blank);
+  fitStage();
+  buildLayers();
+  refreshProps();
+}
+
+function applyCanvasSize(w, h){
+  if(!state.canvas){ startCanvas(w,h); return; }
+  state.canvas = { w, h };
+  canvasMeta.innerHTML = `<span>${w} × ${h} PX</span><span>150 DPI</span>`;
+  fileNameEl.textContent = `UNTITLED · ${w}×${h}`;
+  fitStage();
+}
+
+function resetAll(){
+  state.canvas = null;
+  state.templateId = null;
+  state.components = [];
+  state.locks = {};
+  state.transforms = {};
+  state.origBBoxes = {};
+  state.colors = {};
+  state.originalColors = {};
+  state.activeLayer = null;
+  state.bgDataUrl = null;
+  state.bgFade = 0;
+  state.bgBlur = 0;
+  state.fields = {
+    date:'5/30', time:'16:00', session:'週六下午',
+    shop:'新竹 | 炫鋒車業', location:'新竹縣竹東鎮公道路958-2號'
+  };
+  stage.style.display = 'none';
+  canvasEmpty.style.display = '';
+  canvasMeta.innerHTML = '';
+  fileNameEl.textContent = '— UNTITLED —';
+  canvasSvgWrap.innerHTML = '';
+  $$('.gallery-item').forEach(g=>g.classList.remove('selected'));
+  buildLayers();
+  refreshProps();
+}
+
+/* ---------- TEMPLATE LOAD ---------- */
+function loadTemplate(tplKey){
+  const tpl = TEMPLATES[tplKey];
+  if(!tpl) return;
+  let svgEl;
+  if(tpl.source === 'builtin'){
+    const node = document.getElementById(tpl.tplId).content.cloneNode(true);
+    svgEl = node.querySelector('svg');
+  } else {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = tpl.svgText;
+    svgEl = tmp.querySelector('svg');
+    if(!svgEl){ alert('INVALID SVG'); return; }
+  }
+  canvasSvgWrap.innerHTML = '';
+  canvasSvgWrap.appendChild(svgEl);
+  state.templateId = tplKey;
+
+  /* Discover components present in this SVG */
+  state.components = [];
+  state.locks = {};
+  state.transforms = {};
+  state.origBBoxes = {};
+  state.colors = {};
+  state.originalColors = {};
+  COMPONENT_DEFS.forEach(def=>{
+    const el = svgEl.querySelector('#' + def.id);
+    if(el){
+      state.components.push(def);
+      state.locks[def.id] = true;
+      const dt = DEFAULT_TRANSLATE[def.id] || {tx:0, ty:0};
+      state.transforms[def.id] = { tx:dt.tx, ty:dt.ty, scale: DEFAULT_SCALE[def.id] || 1 };
+    }
+  });
+
+  /* must be in DOM for getBBox — already appended */
+  captureBBoxes();
+  applyFields();
+  applyBgAll();
+  applyAllTransforms();
+  /* Capture each component's natural color BEFORE applying user overrides */
+  captureOriginalColors();
+  applyAllColors();
+
+  state.activeLayer = state.components.length ? state.components[0].id : null;
+  buildLayers();
+  refreshProps();
+  renderDragOverlay();
+
+  $$('.gallery-item').forEach(g => g.classList.toggle('selected', g.dataset.template === tplKey));
+}
+
+function captureBBoxes(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  state.components.forEach(def=>{
+    const el = svg.querySelector('#' + def.id);
+    if(!el) return;
+    try{
+      const b = el.getBBox();
+      state.origBBoxes[def.id] = {
+        x:b.x, y:b.y, w:b.width, h:b.height,
+        cx:b.x + b.width/2, cy:b.y + b.height/2
+      };
+    } catch(e){ /* ignore */ }
+  });
+}
+
+/* ---------- FIELDS ---------- */
+function applyFields(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+
+  /* Special: DATE has slash-split logic */
+  const date = state.fields.date;
+  const dateA = svg.querySelector('#textDateA');
+  const dateB = svg.querySelector('#textDateB');
+  const slash = svg.querySelector('#textDateSlash');
+  if(dateA && dateB && date !== undefined){
+    if(date.includes('/')){
+      const [a,b] = date.split('/');
+      dateA.textContent = a || '';
+      dateB.textContent = b || '';
+      if(slash) slash.style.display = '';
+    } else {
+      dateA.textContent = date;
+      dateB.textContent = '';
+      if(slash) slash.style.display = 'none';
+    }
+  }
+
+  /* Generic: every text component with field + textId */
+  state.components.forEach(def=>{
+    if(def.kind !== 'text') return;
+    if(!def.field || !def.textId) return;
+    if(def.field === 'date') return;
+    const val = state.fields[def.field];
+    if(val === undefined) return;
+    setText(svg, '#' + def.textId, val);
+  });
+}
+function setText(svg, sel, val){
+  const el = svg.querySelector(sel);
+  if(!el) return;
+  const tspan = el.querySelector('tspan');
+  if(tspan) tspan.textContent = val; else el.textContent = val;
+}
+
+/* ---------- BG ---------- */
+function applyBgAll(){ applyBgImage(); applyBgFade(); applyBgBlur(); }
+function applyBgImage(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const bgLayer = svg.querySelector('#bgLayer');
+  if(!bgLayer) return;
+  let bgImg = bgLayer.querySelector('#bgImage');
+  if(state.bgDataUrl){
+    if(!bgImg){
+      bgImg = document.createElementNS(SVG_NS, 'image');
+      bgImg.id = 'bgImage';
+      bgImg.setAttribute('x','-5');
+      bgImg.setAttribute('y','-5');
+      bgImg.setAttribute('width','1210');
+      bgImg.setAttribute('height','814');
+      bgImg.setAttribute('preserveAspectRatio','xMidYMid slice');
+      bgLayer.appendChild(bgImg);
+    }
+    bgImg.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href', state.bgDataUrl);
+    bgImg.setAttribute('href', state.bgDataUrl);
+  } else if(bgImg){ bgImg.remove(); }
+}
+function applyBgFade(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const fade = svg.querySelector('#bgFade');
+  if(fade) fade.setAttribute('opacity', (state.bgFade/100).toFixed(2));
+}
+function applyBgBlur(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const blurNode = svg.querySelector('#bgBlur feGaussianBlur');
+  if(blurNode) blurNode.setAttribute('stdDeviation', String(state.bgBlur));
+}
+function clearBackground(){
+  state.bgDataUrl = null;
+  applyBgImage();
+  refreshProps();
+}
+
+/* ---------- TRANSFORMS ---------- */
+function applyAllTransforms(){
+  state.components.forEach(def => applyTransform(def.id));
+}
+function applyTransform(compId){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const el = svg.querySelector('#' + compId);
+  const t = state.transforms[compId];
+  const bb = state.origBBoxes[compId];
+  if(!el || !t || !bb){ return; }
+  const { tx, ty, scale: s } = t;
+  /* matrix(s 0 0 s tx+cx*(1-s) ty+cy*(1-s)) scales around (cx,cy) and translates by (tx,ty) */
+  const e = tx + bb.cx * (1 - s);
+  const f = ty + bb.cy * (1 - s);
+  el.setAttribute('transform', `matrix(${s} 0 0 ${s} ${e.toFixed(2)} ${f.toFixed(2)})`);
+}
+
+/* ---------- COLOR ---------- */
+const PAINTABLE_TAGS = new Set([
+  'text','tspan','path','rect','circle','ellipse','line','polyline','polygon'
+]);
+function applyAllColors(){
+  Object.keys(state.colors).forEach(applyColor);
+}
+function applyColor(compId){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const root = svg.querySelector('#' + compId);
+  const color = state.colors[compId];
+  if(!root || !color) return;
+  /* Walk every paintable descendant. Use INLINE STYLE — beats CSS classes
+     (presentation attributes lose to class selectors). */
+  const walk = (node)=>{
+    if(node.nodeType !== 1) return;
+    const tag = node.tagName.toLowerCase();
+    if(PAINTABLE_TAGS.has(tag)){
+      const cs = getComputedStyle(node);
+      if(cs.fill && cs.fill !== 'none' && cs.fill !== 'rgba(0, 0, 0, 0)' && cs.fill !== 'transparent'){
+        node.style.fill = color;
+      }
+      if(cs.stroke && cs.stroke !== 'none' && cs.stroke !== 'rgba(0, 0, 0, 0)' && cs.stroke !== 'transparent'){
+        node.style.stroke = color;
+      }
+    }
+    for(const child of node.children) walk(child);
+  };
+  walk(root);
+}
+
+/* Capture each component's primary color BEFORE user overrides */
+function captureOriginalColors(){
+  state.components.forEach(def => captureOriginalColor(def.id));
+}
+function captureOriginalColor(compId){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const root = svg.querySelector('#' + compId);
+  if(!root) return;
+  let primary = null;
+  const walk = (node)=>{
+    if(primary) return;
+    if(node.nodeType !== 1) return;
+    const tag = node.tagName.toLowerCase();
+    if(PAINTABLE_TAGS.has(tag)){
+      const cs = getComputedStyle(node);
+      if(cs.fill && cs.fill !== 'none' && cs.fill !== 'rgba(0, 0, 0, 0)' && cs.fill !== 'transparent'){
+        primary = rgbToHex(cs.fill);
+        return;
+      }
+      if(cs.stroke && cs.stroke !== 'none' && cs.stroke !== 'rgba(0, 0, 0, 0)' && cs.stroke !== 'transparent'){
+        primary = rgbToHex(cs.stroke);
+        return;
+      }
+    }
+    for(const c of node.children) walk(c);
+  };
+  walk(root);
+  state.originalColors[compId] = primary || '#ffffff';
+}
+function rgbToHex(c){
+  if(!c) return '#ffffff';
+  if(c.startsWith('#')) return c.length === 4
+    ? '#' + c.slice(1).split('').map(x=>x+x).join('')
+    : c;
+  const m = c.match(/rgba?\(([^)]+)\)/);
+  if(!m) return '#ffffff';
+  const parts = m[1].split(',').map(s=>parseInt(s.trim(),10));
+  return '#' + parts.slice(0,3).map(n=>(n||0).toString(16).padStart(2,'0')).join('');
+}
+
+/* ---------- ADD / DELETE COMPONENTS ---------- */
+let userCompCounter = 0;
+function nextUserId(){
+  userCompCounter += 1;
+  return 'comp_user_' + Date.now() + '_' + userCompCounter;
+}
+
+function addTextComponent(initialText){
+  if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+  let svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const text = (initialText && initialText.length) ? initialText : 'NEW TEXT';
+  const compId = nextUserId();
+  const textId = compId + '_text';
+  const fieldKey = compId + '_field';
+
+  const g = document.createElementNS(SVG_NS, 'g');
+  g.id = compId;
+  const t = document.createElementNS(SVG_NS, 'text');
+  t.id = textId;
+  t.setAttribute('x', String(state.canvas.w / 2));
+  t.setAttribute('y', String(state.canvas.h / 2));
+  t.setAttribute('text-anchor', 'middle');
+  t.setAttribute('dominant-baseline', 'middle');
+  t.setAttribute('font-size', '60');
+  t.setAttribute('font-family', "'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif");
+  t.setAttribute('font-weight', '700');
+  t.style.fill = '#ffffff';
+  t.textContent = text;
+  g.appendChild(t);
+  svg.appendChild(g);
+
+  let bb;
+  try { bb = g.getBBox(); } catch(_){ bb = {x:0,y:0,width:200,height:60}; }
+  state.origBBoxes[compId] = { x:bb.x, y:bb.y, w:bb.width, h:bb.height, cx:bb.x+bb.width/2, cy:bb.y+bb.height/2 };
+  state.transforms[compId] = { tx:0, ty:0, scale:1 };
+  state.locks[compId] = false;
+  state.originalColors[compId] = '#ffffff';
+  state.fields[fieldKey] = text;
+
+  const def = {
+    id: compId,
+    name: 'TEXT · ' + text.slice(0, 14).toUpperCase(),
+    kind: 'text',
+    field: fieldKey,
+    textId: textId,
+    userAdded: true
+  };
+  state.components.push(def);
+  state.activeLayer = compId;
+  buildLayers();
+  refreshProps();
+  renderDragOverlay();
+}
+
+function addSvgComponent(svgText, name){
+  if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+  let svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = svgText;
+  const srcSvg = tmp.querySelector('svg');
+  if(!srcSvg){ alert('INVALID SVG'); return; }
+
+  const compId = nextUserId();
+  const g = document.createElementNS(SVG_NS, 'g');
+  g.id = compId;
+
+  /* Clone children of source SVG; strip inner IDs to avoid conflicts */
+  [...srcSvg.children].forEach(child=>{
+    const tag = child.tagName.toLowerCase();
+    if(tag === 'style') return; // skip — could clash with template styles
+    const clone = child.cloneNode(true);
+    if(clone.id) clone.removeAttribute('id');
+    clone.querySelectorAll && clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    g.appendChild(clone);
+  });
+  svg.appendChild(g);
+
+  /* Measure */
+  let bb;
+  try { bb = g.getBBox(); } catch(_){ bb = {x:0,y:0,width:100,height:100}; }
+  const cx = bb.x + bb.width/2;
+  const cy = bb.y + bb.height/2;
+  state.origBBoxes[compId] = { x:bb.x, y:bb.y, w:bb.width, h:bb.height, cx, cy };
+
+  /* Fit to ~40% of canvas, center it */
+  const targetMax = Math.min(state.canvas.w, state.canvas.h) * 0.4;
+  const naturalMax = Math.max(bb.width, bb.height) || 1;
+  const scale = Math.min(targetMax / naturalMax, 1);
+  state.transforms[compId] = {
+    tx: (state.canvas.w / 2) - cx,
+    ty: (state.canvas.h / 2) - cy,
+    scale
+  };
+  applyTransform(compId);
+
+  state.locks[compId] = false;
+  state.colors[compId] = null;
+  captureOriginalColor(compId);
+
+  const def = {
+    id: compId,
+    name: 'SVG · ' + (name || 'UPLOADED').toUpperCase().slice(0, 18),
+    kind: 'shape',
+    userAdded: true
+  };
+  state.components.push(def);
+  state.activeLayer = compId;
+  buildLayers();
+  refreshProps();
+  renderDragOverlay();
+}
+
+function deleteComponent(compId){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(svg){
+    const el = svg.querySelector('#' + compId);
+    if(el) el.remove();
+  }
+  const def = state.components.find(c => c.id === compId);
+  if(def && def.field) delete state.fields[def.field];
+  state.components = state.components.filter(c => c.id !== compId);
+  delete state.locks[compId];
+  delete state.transforms[compId];
+  delete state.origBBoxes[compId];
+  delete state.colors[compId];
+  delete state.originalColors[compId];
+  if(state.activeLayer === compId){
+    state.activeLayer = state.components.length
+      ? state.components[state.components.length - 1].id
+      : null;
+  }
+  buildLayers();
+  refreshProps();
+  renderDragOverlay();
+}
+
+/* ---------- LAYER PANEL ---------- */
+function buildLayers(){
+  const ul = $('#layersList');
+  const empty = $('#layersEmpty');
+  ul.innerHTML = '';
+  if(!state.components.length){
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  /* Top of list = top of stack (later draw = visually on top). Reverse for display. */
+  [...state.components].reverse().forEach(def=>{
+    const li = document.createElement('li');
+    li.dataset.layer = def.id;
+    li.draggable = true;
+    if(def.kind==='bg') li.classList.add('bg');
+    if(state.activeLayer === def.id) li.classList.add('active');
+    if(!state.locks[def.id]) li.classList.add('unlocked');
+    li.innerHTML = `
+      <span class="grip" title="DRAG TO REORDER" style="cursor:grab; color:var(--ink-3); font-size:calc(9px * var(--font-scale)); letter-spacing:0; user-select:none;">⋮⋮</span>
+      <span class="ic"></span>
+      <span class="name">${def.name}</span>
+      <button class="del-btn" data-del="${def.id}" title="DELETE LAYER">×</button>
+      <button class="lock-btn ${state.locks[def.id] ? 'locked' : 'unlocked'}"
+              data-lock="${def.id}" title="${state.locks[def.id] ? 'LOCKED · CLICK TO UNLOCK' : 'UNLOCKED · CLICK TO LOCK'}">
+        <svg><use href="#${state.locks[def.id] ? 'ico-lock' : 'ico-unlock'}"/></svg>
+      </button>
+    `;
+    li.addEventListener('click', e=>{
+      if(e.target.closest('.lock-btn') || e.target.closest('.del-btn')) return;
+      state.activeLayer = def.id;
+      buildLayers();
+      refreshProps();
+      renderDragOverlay();
+    });
+    li.querySelector('.lock-btn').addEventListener('click', e=>{
+      e.stopPropagation();
+      state.locks[def.id] = !state.locks[def.id];
+      buildLayers();
+      refreshProps();
+      renderDragOverlay();
+    });
+    li.querySelector('.del-btn').addEventListener('click', e=>{
+      e.stopPropagation();
+      deleteComponent(def.id);
+    });
+
+    /* DRAG-TO-REORDER */
+    li.addEventListener('dragstart', e=>{
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', def.id);
+      li.style.opacity = '0.4';
+    });
+    li.addEventListener('dragend', ()=>{ li.style.opacity = ''; });
+    li.addEventListener('dragover', e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      li.style.borderTop = '2px solid var(--select)';
+    });
+    li.addEventListener('dragleave', ()=>{ li.style.borderTop = ''; });
+    li.addEventListener('drop', e=>{
+      e.preventDefault();
+      li.style.borderTop = '';
+      const draggedId = e.dataTransfer.getData('text/plain');
+      const targetId = def.id;
+      if(draggedId && draggedId !== targetId){
+        reorderLayers(draggedId, targetId);
+      }
+    });
+
+    ul.appendChild(li);
+  });
+}
+
+function reorderLayers(draggedId, targetId){
+  /* The visible list is reversed (top of UL = top of stack).
+     Dropping dragged ABOVE target in the UL = move dragged ABOVE target in z-order. */
+  const comps = state.components;
+  const fromIdx = comps.findIndex(c => c.id === draggedId);
+  const toIdx   = comps.findIndex(c => c.id === targetId);
+  if(fromIdx < 0 || toIdx < 0) return;
+  const [moved] = comps.splice(fromIdx, 1);
+  /* Inserting AT the target index puts it just below in stack (since UL is reversed).
+     We want dropped item to take the spot of target as seen in UL = z-index of target.
+     Computed: place dragged AT toIdx position. After splice, adjust if needed. */
+  const newToIdx = comps.findIndex(c => c.id === targetId);
+  comps.splice(newToIdx + 1, 0, moved);
+
+  /* Now reorder DOM: append children in `state.components` order. */
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(svg){
+    comps.forEach(def => {
+      const el = svg.querySelector('#' + def.id);
+      if(el) svg.appendChild(el);
+    });
+  }
+  buildLayers();
+  renderDragOverlay();
+}
+
+/* ---------- PROPERTIES ---------- */
+function refreshProps(){
+  const body = $('#propBody');
+  const which = $('#propWhich');
+  body.innerHTML = '';
+  if(!state.activeLayer){
+    which.textContent = '—';
+    body.innerHTML = `<div class="props-empty">SELECT A LAYER TO EDIT ITS PROPERTIES.</div>`;
+    return;
+  }
+  const def = state.components.find(c => c.id === state.activeLayer);
+  if(!def){
+    which.textContent = '—';
+    body.innerHTML = `<div class="props-empty">NO ACTIVE LAYER.</div>`;
+    return;
+  }
+  which.textContent = def.name;
+
+  if(def.kind === 'bg') body.appendChild(propBackground());
+  else if(def.kind === 'text') body.appendChild(propText(def));
+  else body.appendChild(propShape(def));
+
+  /* Always show transform group (when unlocked) */
+  if(!state.locks[def.id]){
+    body.appendChild(propTransform(def));
+  } else {
+    body.appendChild(propLockedNote());
+  }
+}
+
+function propBackground(){
+  const frag = document.createDocumentFragment();
+  const wrap = document.createElement('div');
+  wrap.className = 'group';
+  wrap.innerHTML = `
+    <label>BACKGROUND IMAGE</label>
+    <div class="upload-zone ${state.bgDataUrl ? 'has-file' : ''}" id="bgUploadZone" tabindex="0">
+      ${state.bgDataUrl
+        ? `BACKGROUND LOADED · CLICK TO REPLACE`
+        : `CLICK OR DROP IMAGE<br><span style="color:var(--ink-3); font-size:calc(9px * var(--font-scale)); letter-spacing:.14em;">JPG / PNG · LAYERS OVER BLACK</span>`}
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button data-action="clear-bg" style="height:26px; font-size:calc(10px * var(--font-scale));">CLEAR</button>
+    </div>
+  `;
+  frag.appendChild(wrap);
+  const fade = document.createElement('div');
+  fade.className = 'group';
+  fade.innerHTML = `
+    <label>FADE TO BLACK <span class="val"><span id="fadeVal">${state.bgFade}</span>%</span></label>
+    <input type="range" id="ctrlBgFade" min="0" max="100" step="1" value="${state.bgFade}">
+    <div class="hint">HIGHER = DARKER</div>
+  `;
+  frag.appendChild(fade);
+  const blur = document.createElement('div');
+  blur.className = 'group';
+  blur.innerHTML = `
+    <label>BLUR <span class="val"><span id="blurVal">${state.bgBlur}</span>PX</span></label>
+    <input type="range" id="ctrlBgBlur" min="0" max="30" step="0.5" value="${state.bgBlur}">
+  `;
+  frag.appendChild(blur);
+
+  setTimeout(()=>{
+    const z = $('#bgUploadZone');
+    if(z){
+      z.addEventListener('click', ()=> $('#bgFileInput').click());
+      z.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') $('#bgFileInput').click(); });
+    }
+    const fEl = $('#ctrlBgFade');
+    if(fEl) fEl.addEventListener('input', e=>{ state.bgFade = +e.target.value; $('#fadeVal').textContent = state.bgFade; applyBgFade(); });
+    const bEl = $('#ctrlBgBlur');
+    if(bEl) bEl.addEventListener('input', e=>{ state.bgBlur = +e.target.value; $('#blurVal').textContent = state.bgBlur; applyBgBlur(); });
+  },0);
+
+  return frag;
+}
+
+function propText(def){
+  const frag = document.createDocumentFragment();
+  const val = state.fields[def.field] || '';
+  const isMulti = def.field === 'location';
+  const g = document.createElement('div');
+  g.className = 'group';
+  g.innerHTML = `
+    <label>${def.name} · TEXT</label>
+    ${isMulti
+      ? `<textarea id="propField">${val}</textarea>`
+      : `<input type="text" id="propField" value="${val.replace(/"/g,'&quot;')}">`}
+    <div class="hint">TEXT IS ALWAYS EDITABLE · DOUBLE-CLICK ON CANVAS ALSO WORKS</div>
+  `;
+  frag.appendChild(g);
+  frag.appendChild(propColor(def));
+  setTimeout(()=>{
+    const f = $('#propField');
+    if(f) f.addEventListener('input', e=>{ state.fields[def.field] = e.target.value; applyFields(); renderDragOverlay(); });
+  },0);
+  return frag;
+}
+
+function propShape(def){
+  const frag = document.createDocumentFragment();
+  const div = document.createElement('div');
+  div.className = 'group';
+  div.innerHTML = `<div class="hint" style="margin:0;">SHAPE LAYER · MOVE & SCALE WHEN UNLOCKED.</div>`;
+  frag.appendChild(div);
+  frag.appendChild(propColor(def));
+  return frag;
+}
+
+function propColor(def){
+  const orig = state.originalColors[def.id] || '#ffffff';
+  const cur = state.colors[def.id] || orig;
+  const isOverridden = !!state.colors[def.id];
+  const g = document.createElement('div');
+  g.className = 'group';
+  g.innerHTML = `
+    <label>COLOR <span class="val">${isOverridden ? cur.toUpperCase() : 'DEFAULT ' + orig.toUpperCase()}</span></label>
+    <div class="row" style="align-items:center;">
+      <input type="color" id="propColor" value="${cur}" style="height:32px; padding:2px; cursor:pointer; flex:0 0 60px;">
+      <button data-action="reset-color" data-comp="${def.id}" style="height:32px; flex:1; font-size:calc(10px * var(--font-scale)); font-weight:600;">RESET TO ORIGINAL</button>
+    </div>
+    <div class="hint">APPLIES TO FILL AND STROKE OF ALL CHILDREN.</div>
+  `;
+  setTimeout(()=>{
+    const c = $('#propColor');
+    if(c){
+      c.addEventListener('input', e=>{
+        state.colors[def.id] = e.target.value;
+        applyColor(def.id);
+        const lbl = c.parentElement.parentElement.querySelector('.val');
+        if(lbl) lbl.textContent = e.target.value.toUpperCase();
+      });
+    }
+  },0);
+  return g;
+}
+
+function propTransform(def){
+  const t = state.transforms[def.id] || {tx:0,ty:0,scale:1};
+  const g = document.createElement('div');
+  g.className = 'group';
+  g.innerHTML = `
+    <label>TRANSFORM <span class="val">UNLOCKED</span></label>
+    <div class="row xy">
+      <input type="number" id="propTx" placeholder="X" value="${t.tx||0}">
+      <input type="number" id="propTy" placeholder="Y" value="${t.ty||0}">
+    </div>
+    <div style="margin-top:6px;">
+      <label style="margin-bottom:4px;">SCALE <span class="val"><span id="scaleVal">${(t.scale||1).toFixed(2)}</span>×</span></label>
+      <input type="range" id="propScale" min="0.2" max="3" step="0.01" value="${t.scale||1}">
+    </div>
+    <div class="hint">DRAG THE BOX ON CANVAS TO MOVE · USE SLIDER TO SCALE</div>
+  `;
+  setTimeout(()=>{
+    const tx = $('#propTx'), ty = $('#propTy'), sc = $('#propScale'), scV = $('#scaleVal');
+    const upd = () => {
+      state.transforms[def.id] = {
+        tx: +tx.value || 0,
+        ty: +ty.value || 0,
+        scale: +sc.value || 1
+      };
+      scV.textContent = (+sc.value).toFixed(2);
+      applyTransform(def.id);
+      renderDragOverlay();
+    };
+    [tx, ty, sc].forEach(el => el.addEventListener('input', upd));
+  },0);
+  return g;
+}
+
+function propLockedNote(){
+  const div = document.createElement('div');
+  div.className = 'group locked-note';
+  div.innerHTML = `<span class="pad"><svg width="11" height="11"><use href="#ico-lock"/></svg></span>LOCKED · CLICK LOCK ICON IN LAYERS TO UNLOCK MOVE & SCALE`;
+  return div;
+}
+
+/* ---------- DRAG OVERLAY (move bounding boxes) ---------- */
+function renderDragOverlay(){
+  dragOverlay.innerHTML = '';
+  if(!state.canvas || !state.components.length) return;
+
+  state.components.forEach(def=>{
+    if(state.locks[def.id]) return;
+    const bb = state.origBBoxes[def.id];
+    if(!bb) return;
+    const svg = canvasSvgWrap.querySelector('svg');
+    if(!svg) return;
+    /* Compute screen rect using the element's current bounding client rect */
+    const el = svg.querySelector('#' + def.id);
+    if(!el) return;
+    const r = el.getBoundingClientRect();
+    const s = stage.getBoundingClientRect();
+    if(r.width < 1 || r.height < 1) return;
+
+    const box = document.createElement('div');
+    box.className = 'drag-box' + (state.activeLayer === def.id ? ' active' : '');
+    box.style.left   = (r.left - s.left) + 'px';
+    box.style.top    = (r.top  - s.top)  + 'px';
+    box.style.width  = r.width + 'px';
+    box.style.height = r.height + 'px';
+    box.dataset.comp = def.id;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = def.name;
+    box.appendChild(lbl);
+
+    /* corner handle for scale */
+    const handle = document.createElement('div');
+    handle.className = 'handle br';
+    handle.dataset.role = 'scale';
+    box.appendChild(handle);
+
+    box.addEventListener('mousedown', onBoxMouseDown);
+    handle.addEventListener('mousedown', e=>{ e.stopPropagation(); onHandleMouseDown(e, def.id); });
+
+    dragOverlay.appendChild(box);
+  });
+}
+
+function svgUnitsPerScreenPx(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return 1;
+  const vb = svg.viewBox.baseVal;
+  const stageW = stage.clientWidth || 1;
+  return vb.width / stageW;
+}
+
+let drag = null;
+function onBoxMouseDown(e){
+  e.preventDefault();
+  const compId = e.currentTarget.dataset.comp;
+  const t = state.transforms[compId];
+  drag = { mode:'move', compId, sx:e.clientX, sy:e.clientY, tx0:t.tx, ty0:t.ty };
+  state.activeLayer = compId;
+  buildLayers();
+  refreshProps();
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup', onDragEnd);
+}
+function onHandleMouseDown(e, compId){
+  e.preventDefault();
+  const t = state.transforms[compId];
+  const bb = state.origBBoxes[compId];
+  /* center in screen coords for distance ref */
+  const svg = canvasSvgWrap.querySelector('svg');
+  const el = svg.querySelector('#' + compId);
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width/2;
+  const cy = r.top + r.height/2;
+  const d0 = Math.hypot(e.clientX - cx, e.clientY - cy) || 1;
+  drag = { mode:'scale', compId, cx, cy, d0, s0:t.scale };
+  state.activeLayer = compId;
+  buildLayers();
+  refreshProps();
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup', onDragEnd);
+}
+function onDragMove(e){
+  if(!drag) return;
+  if(drag.mode === 'move'){
+    const k = svgUnitsPerScreenPx();
+    let dx = (e.clientX - drag.sx) * k;
+    let dy = (e.clientY - drag.sy) * k;
+
+    /* SHIFT-CONSTRAIN to axis with larger |delta| */
+    if(e.shiftKey){
+      if(Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0;
+    }
+
+    let txNew = drag.tx0 + dx;
+    let tyNew = drag.ty0 + dy;
+
+    /* SNAP-TO-CENTER */
+    state.snapState.x = false;
+    state.snapState.y = false;
+    if(state.snapSensitivity > 0 && state.canvas){
+      const bb = state.origBBoxes[drag.compId];
+      const cxAfter = bb.cx + txNew;
+      const cyAfter = bb.cy + tyNew;
+      const cxCanvas = state.canvas.w / 2;
+      const cyCanvas = state.canvas.h / 2;
+      /* Skip the axis the user is shift-locking off — no snap "fight" */
+      if(!(e.shiftKey && dx === 0) && Math.abs(cxAfter - cxCanvas) <= state.snapSensitivity){
+        txNew = cxCanvas - bb.cx;
+        state.snapState.x = true;
+      }
+      if(!(e.shiftKey && dy === 0) && Math.abs(cyAfter - cyCanvas) <= state.snapSensitivity){
+        tyNew = cyCanvas - bb.cy;
+        state.snapState.y = true;
+      }
+    }
+
+    state.transforms[drag.compId].tx = txNew;
+    state.transforms[drag.compId].ty = tyNew;
+    applyTransform(drag.compId);
+    renderDragOverlay();
+    renderSnapGuides();
+    const txEl = $('#propTx'), tyEl = $('#propTy');
+    if(txEl) txEl.value = Math.round(state.transforms[drag.compId].tx);
+    if(tyEl) tyEl.value = Math.round(state.transforms[drag.compId].ty);
+  } else if(drag.mode === 'scale'){
+    const d1 = Math.hypot(e.clientX - drag.cx, e.clientY - drag.cy);
+    let sNew = drag.s0 * (d1 / drag.d0);
+    sNew = Math.max(0.2, Math.min(3, sNew));
+    state.transforms[drag.compId].scale = sNew;
+    applyTransform(drag.compId);
+    renderDragOverlay();
+    const sc = $('#propScale'), scV = $('#scaleVal');
+    if(sc) sc.value = sNew;
+    if(scV) scV.textContent = sNew.toFixed(2);
+  }
+}
+function onDragEnd(){
+  drag = null;
+  state.snapState = { x:false, y:false };
+  renderSnapGuides();
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+}
+
+/* ---------- SNAP GUIDE LINES ---------- */
+function renderSnapGuides(){
+  let g = document.getElementById('snapGuides');
+  if(!g){
+    g = document.createElement('div');
+    g.id = 'snapGuides';
+    g.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:15;';
+    stage.appendChild(g);
+  }
+  g.innerHTML = '';
+  if(state.snapState.x){
+    const v = document.createElement('div');
+    v.style.cssText = 'position:absolute;top:0;bottom:0;left:50%;width:1px;background:#f7b500;box-shadow:0 0 6px rgba(247,181,0,.8);';
+    g.appendChild(v);
+  }
+  if(state.snapState.y){
+    const h = document.createElement('div');
+    h.style.cssText = 'position:absolute;left:0;right:0;top:50%;height:1px;background:#f7b500;box-shadow:0 0 6px rgba(247,181,0,.8);';
+    g.appendChild(h);
+  }
+}
+
+/* ---------- DOUBLE-CLICK INLINE EDIT ---------- */
+canvasSvgWrap.addEventListener('dblclick', e=>{
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return;
+  /* Find which text component was hit */
+  const target = e.target;
+  /* match against text elements with known IDs */
+  const textComps = state.components.filter(c => c.kind === 'text');
+  let hit = null;
+  textComps.forEach(def=>{
+    const el = svg.querySelector('#' + def.textId);
+    if(!el) return;
+    if(el === target || el.contains(target)) hit = def;
+  });
+  if(!hit) return;
+  openInlineEditor(hit);
+});
+
+function openInlineEditor(def){
+  const svg = canvasSvgWrap.querySelector('svg');
+  const el = svg.querySelector('#' + def.textId);
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  const s = stage.getBoundingClientRect();
+
+  const old = document.querySelector('.inline-edit');
+  if(old) old.remove();
+
+  const input = document.createElement(def.field === 'location' ? 'textarea' : 'input');
+  input.className = 'inline-edit';
+  input.value = state.fields[def.field] || '';
+  /* size to text bbox */
+  input.style.left   = (r.left - s.left - 4) + 'px';
+  input.style.top    = (r.top - s.top - 4) + 'px';
+  input.style.minWidth = Math.max(120, r.width + 12) + 'px';
+  input.style.minHeight = (r.height + 8) + 'px';
+  /* match approximate font size for nicer feel */
+  const fs = parseFloat(getComputedStyle(el).fontSize) || 24;
+  input.style.fontSize = fs + 'px';
+  stage.appendChild(input);
+  input.focus();
+  input.select && input.select();
+
+  const commit = ()=>{
+    state.fields[def.field] = input.value;
+    applyFields();
+    renderDragOverlay();
+    /* sync props field if open */
+    const f = $('#propField');
+    if(f && state.activeLayer === def.id) f.value = input.value;
+    input.remove();
+  };
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); commit(); }
+    if(e.key === 'Escape'){ input.remove(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+/* ---------- EXPORT ---------- */
+function serializeSvg(){
+  const svg = canvasSvgWrap.querySelector('svg');
+  if(!svg) return null;
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('width', state.canvas.w);
+  clone.setAttribute('height', state.canvas.h);
+  const styleEl = clone.querySelector('style');
+  const fontImport = `@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap');`;
+  if(styleEl) styleEl.textContent = fontImport + '\n' + styleEl.textContent;
+  return new XMLSerializer().serializeToString(clone);
+}
+async function exportPNG(){
+  const svgStr = serializeSvg();
+  if(!svgStr){ alert('NO CANVAS TO EXPORT'); return; }
+  const blob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  await new Promise((res, rej)=>{ img.onload=res; img.onerror=rej; img.src=url; });
+  const cvs = document.createElement('canvas');
+  cvs.width = state.canvas.w; cvs.height = state.canvas.h;
+  const ctx = cvs.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width,cvs.height);
+  ctx.drawImage(img, 0,0,cvs.width,cvs.height);
+  URL.revokeObjectURL(url);
+  cvs.toBlob(b=>{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `project-pc_${state.canvas.w}x${state.canvas.h}.png`;
+    a.click();
+  }, 'image/png');
+}
+function exportSVG(){
+  const svgStr = serializeSvg();
+  if(!svgStr){ alert('NO CANVAS TO EXPORT'); return; }
+  const blob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `project-pc_${state.canvas.w}x${state.canvas.h}.svg`;
+  a.click();
+}
+function exportHTML(){
+  const svgStr = serializeSvg();
+  if(!svgStr){ alert('NO CANVAS TO EXPORT'); return; }
+  const html =
+`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PROJECT-PC EXPORT</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.frame{width:900px;height:900px;max-width:100vw;max-height:100vh;}.frame svg{width:100%;height:100%;display:block;}</style>
+</head><body><div class="frame">${svgStr}</div></body></html>`;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `project-pc_900x900.html`;
+  a.click();
+}
+
+/* ---------- MODALS ---------- */
+function openModal(id){ $(`#${id}`).classList.add('open'); }
+function closeModal(id){ $(`#${id}`).classList.remove('open'); }
+$$('[data-close-modal]').forEach(b => b.addEventListener('click', ()=> closeModal(b.dataset.closeModal)));
+$$('.modal-mask').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+function refreshSizeChoices(){
+  ['sizeChoicesNew','sizeChoicesApply'].forEach(id=>{
+    const c = document.getElementById(id);
+    c.innerHTML = '';
+    const mode = id === 'sizeChoicesNew' ? 'new' : 'apply';
+    state.sizes.forEach(s=>{
+      const el = document.createElement('div');
+      el.className = 'choice';
+      el.innerHTML = `<span class="lbl">${s.label||'CUSTOM'}</span><span class="meta">${s.w} × ${s.h}</span>`;
+      el.addEventListener('click', ()=>{
+        if(mode === 'new'){ startCanvas(s.w, s.h); closeModal('modalNew'); }
+        else { applyCanvasSize(s.w, s.h); closeModal('modalApplySize'); }
+      });
+      c.appendChild(el);
+    });
+  });
+}
+refreshSizeChoices();
+
+/* +CANVAS SIZE merged into NEW... — "ADD & USE" */
+document.body.addEventListener('click', e=>{
+  const b = e.target.closest('[data-action="confirm-add-size"]');
+  if(!b) return;
+  const w = +$('#addW').value, h = +$('#addH').value;
+  if(!w || !h) return;
+  state.sizes.push({w, h, label:'CUSTOM'});
+  refreshSizeChoices();
+  startCanvas(w, h);
+  closeModal('modalNew');
+});
+
+$('#modalExport').addEventListener('click', e=>{
+  const c = e.target.closest('.choice');
+  if(!c) return;
+  const t = c.dataset.export;
+  closeModal('modalExport');
+  if(t==='png') exportPNG();
+  if(t==='html') exportHTML();
+  if(t==='svg') exportSVG();
+});
+
+/* ---------- TOOLBAR ---------- */
+document.body.addEventListener('click', e=>{
+  const t = e.target.closest('[data-action]');
+  if(!t) return;
+  const a = t.dataset.action;
+  if(a === 'new') openModal('modalNew');
+  else if(a === 'apply-size'){ if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; } openModal('modalApplySize'); }
+  else if(a === 'export'){ if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; } openModal('modalExport'); }
+  else if(a === 'reset'){ if(confirm('RESET THE WHOLE SESSION?')) resetAll(); }
+  else if(a === 'add-text'){
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    addTextComponent('NEW TEXT');
+  }
+  else if(a === 'add-svg'){
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    $('#compSvgInput').click();
+  }
+  else if(a === 'clear-bg') clearBackground();
+  else if(a === 'reset-color'){
+    const compId = t.dataset.comp;
+    if(!compId || !state.templateId) return;
+    /* Restore by reloading template, but preserve transforms/colors/fields */
+    const keepColors = {...state.colors};
+    delete keepColors[compId];
+    const keepTransforms = {...state.transforms};
+    const keepLocks = {...state.locks};
+    const tplId = state.templateId;
+    loadTemplate(tplId);
+    state.colors = keepColors;
+    state.transforms = keepTransforms;
+    state.locks = keepLocks;
+    applyAllTransforms();
+    applyAllColors();
+    buildLayers();
+    refreshProps();
+    renderDragOverlay();
+  }
+  else if(a === 'toggle-layers') $('#panelL').classList.toggle('mobile-open');
+});
+
+/* ---------- GALLERY ---------- */
+function buildGallery(){
+  const g = $('#gallery');
+  g.innerHTML = '';
+
+  /* + ADD TEMPLATE tile */
+  const add = document.createElement('div');
+  add.className = 'gallery-add';
+  add.title = 'UPLOAD AN SVG TEMPLATE';
+  add.innerHTML = `<span class="plus">+</span><span class="lbl">ADD SVG</span>`;
+  add.addEventListener('click', ()=> $('#tplFileInput').click());
+  g.appendChild(add);
+
+  Object.values(TEMPLATES).forEach(t=>{
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    if(t.source === 'user') item.classList.add('user');
+    item.dataset.template = t.id;
+    let svg;
+    if(t.source === 'builtin'){
+      const node = document.getElementById(t.tplId).content.cloneNode(true);
+      svg = node.querySelector('svg');
+    } else {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = t.svgText;
+      svg = tmp.querySelector('svg');
+    }
+    if(svg) item.appendChild(svg);
+    const tag = document.createElement('div');
+    tag.className = 'gtag';
+    tag.textContent = `${t.nativeW}×${t.nativeH}`;
+    item.appendChild(tag);
+    item.addEventListener('click', ()=>{
+      if(!state.canvas){
+        const statusEl = document.querySelector('.tools-meta .status');
+        if(statusEl){
+          statusEl.textContent = 'DBL-CLICK TO START';
+          setTimeout(()=>{ statusEl.textContent = 'READY'; }, 2400);
+        }
+      } else {
+        loadTemplate(t.id);
+      }
+    });
+    item.addEventListener('dblclick', ()=>{
+      startCanvas(t.nativeW, t.nativeH);
+      loadTemplate(t.id);
+    });
+    g.appendChild(item);
+  });
+}
+buildGallery();
+
+/* ---------- BG UPLOAD ---------- */
+$('#bgFileInput').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  readBgImage(f);
+  e.target.value = '';
+});
+
+/* DROP TARGETS: canvas (handles BG image + SVG + text), and LAYERS panel (handles SVG + text) */
+const panelL = $('#panelL');
+['dragenter','dragover'].forEach(ev=>{
+  panelL.addEventListener(ev, e=>{
+    /* only highlight if it's a file or text drag, not a layer re-order drag */
+    if(e.dataTransfer.types.includes('Files') ||
+       e.dataTransfer.types.includes('text/plain')){
+      e.preventDefault();
+    }
+  });
+});
+panelL.addEventListener('drop', e=>{
+  const dt = e.dataTransfer;
+  const file = dt.files && dt.files[0];
+  if(file && (/\.svg$/i.test(file.name) || file.type === 'image/svg+xml')){
+    e.preventDefault();
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    const fr = new FileReader();
+    fr.onload = ()=> addSvgComponent(fr.result, file.name.replace(/\.svg$/i,''));
+    fr.readAsText(file);
+    return;
+  }
+  /* If a non-layer text drop arrives (e.g. from a webpage selection) — add as text comp */
+  const layerDragId = dt.getData('text/plain');
+  /* heuristic: layer-reorder uses our comp IDs which always start with 'comp_' */
+  if(layerDragId && !layerDragId.startsWith('comp_')){
+    e.preventDefault();
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    addTextComponent(layerDragId);
+  }
+});
+['dragenter','dragover'].forEach(ev=>{
+  canvasArea.addEventListener(ev, e=>{ e.preventDefault(); canvasArea.classList.add('drag-over'); });
+});
+['dragleave','drop'].forEach(ev=>{
+  canvasArea.addEventListener(ev, e=>{ e.preventDefault(); canvasArea.classList.remove('drag-over'); });
+});
+canvasArea.addEventListener('drop', e=>{
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  const file = dt.files && dt.files[0];
+
+  /* 1) SVG file → add as component */
+  if(file && (/\.svg$/i.test(file.name) || file.type === 'image/svg+xml')){
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    const fr = new FileReader();
+    fr.onload = ()=> addSvgComponent(fr.result, file.name.replace(/\.svg$/i,''));
+    fr.readAsText(file);
+    return;
+  }
+
+  /* 2) Raster image → background replace */
+  if(file && file.type.startsWith('image/')){
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    if(!state.templateId){ alert('LOAD A TEMPLATE FIRST (BG REPLACES TEMPLATE BG)'); return; }
+    readBgImage(file);
+    return;
+  }
+
+  /* 3) Plain text → add as text component */
+  const txt = dt.getData('text/plain');
+  if(txt){
+    if(!state.canvas){ alert('CREATE A CANVAS FIRST'); return; }
+    addTextComponent(txt);
+    return;
+  }
+});
+function readBgImage(f){
+  if(!state.templateId){ alert('LOAD A TEMPLATE FIRST'); return; }
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    state.bgDataUrl = fr.result;
+    applyBgImage();
+    refreshProps();
+    renderDragOverlay();
+  };
+  fr.readAsDataURL(f);
+}
+
+/* ---------- TEMPLATE UPLOAD ---------- */
+$('#tplFileInput').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  if(!/\.svg$/i.test(f.name) && f.type !== 'image/svg+xml'){ alert('PLEASE UPLOAD AN SVG FILE'); return; }
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    const text = fr.result;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = text;
+    const svg = tmp.querySelector('svg');
+    if(!svg){ alert('NO <svg> ELEMENT FOUND'); return; }
+    let w, h;
+    const vb = svg.getAttribute('viewBox');
+    if(vb){ const p = vb.split(/[\s,]+/).map(Number); w = p[2]; h = p[3]; }
+    else { w = +svg.getAttribute('width') || 1200; h = +svg.getAttribute('height') || 1200; }
+    const id = 'user_' + Date.now();
+    TEMPLATES[id] = { id, source:'user', label:f.name.replace(/\.svg$/i,'').toUpperCase(),
+      nativeW:Math.round(w), nativeH:Math.round(h), svgText:text };
+    buildGallery();
+    if(!state.canvas) startCanvas(Math.round(w), Math.round(h));
+    loadTemplate(id);
+    alert('TEMPLATE LOADED. FOR EDITABLE FIELDS AND BG, YOUR SVG SHOULD USE THESE IDS:\n' +
+          'COMPONENTS: comp_bg, comp_white_strip, comp_logo, comp_slogan_big, comp_slogan_sub,\n' +
+          'comp_shop, comp_location, comp_date_box, comp_date, comp_circle, comp_session, comp_time, comp_header\n' +
+          'TEXT NODES: textDateA, textDateSlash (line or text), textDateB, textTime, textSession, textShop, textLocation\n' +
+          'BG INFRA: bgLayer (with filter url(#bgBlur)), bgRect, bgFade, bgBlur (feGaussianBlur)');
+  };
+  fr.readAsText(f);
+  e.target.value = '';
+});
+
+/* + SVG component (ADDS to current canvas, NOT a template replacement) */
+$('#compSvgInput').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  if(!/\.svg$/i.test(f.name) && f.type !== 'image/svg+xml'){ alert('PLEASE UPLOAD AN SVG FILE'); return; }
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    addSvgComponent(fr.result, f.name.replace(/\.svg$/i,''));
+  };
+  fr.readAsText(f);
+  e.target.value = '';
+});
+
+/* ---------- DEV PANEL (hamburger toggle) ---------- */
+const devp = $('#devp');
+function toggleDevp(){
+  const willOpen = !devp.classList.contains('open');
+  devp.classList.toggle('open', willOpen);
+  $('#hamburger').classList.toggle('active', willOpen);
+}
+function closeDevp(){
+  devp.classList.remove('open');
+  $('#hamburger').classList.remove('active');
+}
+$('#hamburger').addEventListener('click', toggleDevp);
+$('#devpClose').addEventListener('click', closeDevp);
+
+$('#themeSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-theme]');
+  if(!b) return;
+  document.body.dataset.theme = b.dataset.theme;
+  $$('#themeSeg button').forEach(x => x.classList.toggle('active', x===b));
+});
+
+/* ----- DEV PANEL UI CONTROLS ----- */
+const UI_DEFAULTS = {
+  font: "'Barlow Condensed', 'DIN', sans-serif",
+  fontSize: 13,
+  letterSpacing: 6,    /* slider 0..20 → 0..0.20em */
+  ink:    '#f2f2f2',
+  ink2:   '#a8a8b0',
+  ink3:   '#6f6f78',
+  accent: '#f7b500',
+  select: '#4a90e2',
+  gridAlpha: 30,
+  snap: 18,
+  theme: 'dark'
+};
+
+function setFontSize(v){
+  document.documentElement.style.setProperty('--font-size-base', v + 'px');
+  document.documentElement.style.setProperty('--font-scale', (v / 13).toFixed(3));
+  $('#fsVal').textContent = v;
+}
+function setLetterSpacing(v){
+  /* slider 0..20 → 0.00 .. 0.20 em */
+  const em = (v / 100).toFixed(2);
+  document.documentElement.style.setProperty('--ui-letter-spacing', em + 'em');
+  $('#lsVal').textContent = em;
+}
+
+$('#ctrlFontSize').addEventListener('input', e => setFontSize(+e.target.value));
+$('#ctrlLetterSpacing').addEventListener('input', e => setLetterSpacing(+e.target.value));
+$('#ctrlInk').addEventListener('input',    e => document.documentElement.style.setProperty('--ink',    e.target.value));
+$('#ctrlInk2').addEventListener('input',   e => document.documentElement.style.setProperty('--ink-2',  e.target.value));
+$('#ctrlInk3').addEventListener('input',   e => document.documentElement.style.setProperty('--ink-3',  e.target.value));
+$('#ctrlAccent').addEventListener('input', e => document.documentElement.style.setProperty('--warn',   e.target.value));
+$('#ctrlSelect').addEventListener('input', e => document.documentElement.style.setProperty('--select', e.target.value));
+$('#ctrlFont').addEventListener('change',  e => document.documentElement.style.setProperty('--font-ui', e.target.value));
+$('#ctrlGridAlpha').addEventListener('input', e=>{
+  document.documentElement.style.setProperty('--grid-alpha', (e.target.value/100));
+  $('#gaVal').textContent = e.target.value;
+});
+$('#ctrlSnap').addEventListener('input', e=>{
+  state.snapSensitivity = +e.target.value;
+  $('#snapVal').textContent = e.target.value;
+});
+
+$('#ctrlResetUi').addEventListener('click', ()=>{
+  const d = UI_DEFAULTS;
+  $('#ctrlFont').value = d.font;
+  $('#ctrlFontSize').value = d.fontSize;
+  $('#ctrlLetterSpacing').value = d.letterSpacing;
+  $('#ctrlInk').value = d.ink;
+  $('#ctrlInk2').value = d.ink2;
+  $('#ctrlInk3').value = d.ink3;
+  $('#ctrlAccent').value = d.accent;
+  $('#ctrlSelect').value = d.select;
+  $('#ctrlGridAlpha').value = d.gridAlpha;
+  $('#ctrlSnap').value = d.snap;
+  /* apply */
+  document.documentElement.style.setProperty('--font-ui', d.font);
+  setFontSize(d.fontSize);
+  setLetterSpacing(d.letterSpacing);
+  document.documentElement.style.setProperty('--ink',    d.ink);
+  document.documentElement.style.setProperty('--ink-2',  d.ink2);
+  document.documentElement.style.setProperty('--ink-3',  d.ink3);
+  document.documentElement.style.setProperty('--warn',   d.accent);
+  document.documentElement.style.setProperty('--select', d.select);
+  document.documentElement.style.setProperty('--grid-alpha', d.gridAlpha/100);
+  $('#gaVal').textContent = d.gridAlpha;
+  state.snapSensitivity = d.snap;
+  $('#snapVal').textContent = d.snap;
+  document.body.dataset.theme = d.theme;
+  $$('#themeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.theme === d.theme));
+});
+
+/* ---------- KEYBOARD ---------- */
+document.addEventListener('keydown', e=>{
+  if(e.target.matches('input,textarea,select')) return;
+  if(e.key === 'h' || e.key === 'H') toggleDevp();
+  if(e.key === 'Escape'){
+    closeDevp();
+    $$('.modal-mask.open').forEach(m=>m.classList.remove('open'));
+  }
+});
+
+/* ---------- INIT ---------- */
+buildLayers();
+refreshProps();
+window.addEventListener('load', fitStage);
+</script>
+</body>
+</html>
