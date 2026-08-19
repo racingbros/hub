@@ -204,8 +204,8 @@ button{cursor:pointer}
 .mn-items .mn-it.badge+.mn-it.badge{margin-left:0}
 .mn-tblwrap{overflow-x:auto;margin:calc(14px*var(--my)) 0}
 .mn-table{border-collapse:collapse;font-size:calc(13px*var(--ts));border:2px solid #111}
-.mn-table th{font-weight:500;border-top:1px solid #111;border-bottom:1px solid #111;padding:6px 18px;text-align:center;white-space:nowrap}
-.mn-table td{padding:6px 18px;text-align:center;white-space:nowrap}
+.mn-table th{font-weight:500;border-top:1px solid #111;border-bottom:1px solid #111;padding:6px 14px;text-align:center;white-space:nowrap}
+.mn-table td{padding:6px 14px;text-align:center;white-space:nowrap}
 .mn-table tbody tr:nth-child(odd){background:#c9c9c9}
 .mn-table tbody tr:nth-child(even){background:#e7e7e7}
 .mn-table tbody tr:last-child td{border-bottom:1px solid #111}
@@ -286,6 +286,7 @@ button{cursor:pointer}
       <button class="sb-btn" data-ins="heading">SECTION HEADING</button>
       <button class="sb-btn" data-ins="subhead">SUB HEADING</button>
       <button class="sb-btn" data-ins="step">STEP (IMAGE + TEXT)</button>
+      <button class="sb-btn" data-ins="stepimg">+ IMAGE TO STEP</button>
       <button class="sb-btn" data-ins="image">IMAGE</button>
       <button class="sb-btn" data-ins="csv">TABLE (CSV)</button>
       <button class="sb-btn" data-ins="badge">SPEC LABEL</button>
@@ -308,7 +309,7 @@ button{cursor:pointer}
         <button class="sb-btn al-i" data-av="bottom" title="Align items bottom">
           <svg viewBox="0 0 16 16" width="14" height="14"><line x1="1" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="1.5"></line><rect x="3" y="4" width="3" height="9" fill="currentColor"></rect><rect x="10" y="7" width="3" height="6" fill="currentColor"></rect></svg></button>
       </div>
-      <div class="sb-note">CLICK A BLOCK &mdash; OR ANY SINGLE COMPONENT INSIDE IT (LOGO, PHOTO, TITLE, ROW&hellip;) &mdash; THEN ALIGN, OR PRESS DEL TO DELETE IT. DRAG ANY IMAGE TO MOVE IT; HOVER FOR + / &minus; SCALE.</div>
+      <div class="sb-note">CLICK A BLOCK &mdash; OR ANY SINGLE COMPONENT INSIDE IT (LOGO, PHOTO, TITLE, ROW&hellip;) &mdash; THEN ALIGN, OR PRESS DEL TO DELETE IT. DRAG ANY IMAGE TO MOVE IT; HOVER FOR + / &minus; SCALE.<br>ANY STEP TAKES AS MANY IMAGES AS YOU LIKE &mdash; SELECT IT AND PRESS <b>+ IMAGE TO STEP</b>, OR USE <b>+IMG</b> ON THE BLOCK.</div>
       <div class="sb-h">TYPOGRAPHY &amp; LAYOUT</div>
       <div class="sld"><label>FONT SIZE <b id="v-ts">100%</b></label>
         <input type="range" id="sl-ts" min="0.6" max="1.6" step="0.02" value="1"></div>
@@ -410,7 +411,22 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 /* Pristine copy of this file, captured before the app mutates the DOM.
    Used by EXPORT to regenerate MANUAL_CREATOR.html with current data. */
-const SRC='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+const SRC=(()=>{
+  /* Browser extensions (dark-mode injectors and friends) push nodes and
+     attributes into the live document. Capturing outerHTML raw bakes them
+     into every exported editor, so clone first and scrub the known ones. */
+  const d=document.documentElement.cloneNode(true);
+  d.querySelectorAll('[id^="dark-mode-"],[id^="darkreader"],style[class*="darkreader"]').forEach(n=>n.remove());
+  d.querySelectorAll('*').forEach(el=>{
+    [...el.attributes].forEach(a=>{ if(/^data-darkreader/i.test(a.name))el.removeAttribute(a.name); });
+    const c=el.getAttribute('class');
+    if(c&&/native-dark|darkreader/.test(c)){
+      const clean=c.split(/\s+/).filter(x=>!/native-dark|darkreader/.test(x)).join(' ');
+      clean?el.setAttribute('class',clean):el.removeAttribute('class');
+    }
+  });
+  return '<!DOCTYPE html>\n'+d.outerHTML;
+})();
 
 let WS, doc, ASSETS;
 try{
@@ -726,15 +742,65 @@ $('#page-root').addEventListener('dblclick',e=>{
 });
 $('#page-root').addEventListener('focusout',e=>{ if(editEl&&e.target===editEl)commitEdit(); });
 $('#page-root').addEventListener('keydown',e=>{ if(e.key==='Escape'&&editEl){commitEdit();render();} });
+/* ---------- asset filing ----------------------------------------------
+   Every image is filed as  <root>/photo/img-NN.ext  or  <root>/diagram/dgm-NN.ext.
+   Line art (png / svg / gif) counts as a diagram, photographs (jpg / webp) as a
+   photo. <root> is the manual's own name, so every manual owns exactly one
+   folder and renaming a manual re-files its images on the next export.
+   Nothing is ever written to others/. */
+const DIAG_EXT=['png','svg','gif'];
+const FOLDER={photo:['photo','img'],diagram:['diagram','dgm']};
+const kindOf=ext=>DIAG_EXT.indexOf(ext)>=0?'diagram':'photo';
+function assetRoot(){
+  /* the manual's own name, lowercased - SCOUT43_SPRING_CHANGE -> scout43_spring_change */
+  return String((doc&&doc.name)||'manual').toLowerCase()
+    .replace(/[^a-z0-9_]+/g,'_').replace(/^_+|_+$/g,'')||'manual';
+}
+function nextAssetPath(ext){
+  const root=assetRoot(), f=FOLDER[kindOf(ext)];
+  const re=new RegExp('^'+root+'/'+f[0]+'/'+f[1]+'-(\\d+)\\.','i');
+  let hi=0;
+  for(const k in ASSETS){ const m=re.exec(String((ASSETS[k]||{}).path||'')); if(m)hi=Math.max(hi,+m[1]); }
+  return root+'/'+f[0]+'/'+f[1]+'-'+String(hi+1).padStart(2,'0')+'.'+ext;
+}
+function newAssetKey(path){
+  const base=path.replace(/\.[a-z0-9]+$/i,'').split('/').pop().replace(/[^a-z0-9]+/gi,'')||'img';
+  let k=base,i=1; while(ASSETS[k])k=base+'_'+(++i);
+  return k;
+}
+/* legacy manuals - and the built-in placeholder - can still carry others/
+   paths. Re-file them so an exported pack never contains an others/ folder. */
+/* Only files the app named itself (img-NN / dgm-NN) follow the manual around.
+   Anything carrying a hand-given name - logo/racingbros.png, a shared product
+   drawing like scout43/diagram/fork-hero.png - keeps the home you gave it. */
+const APP_NAMED=/^(.*)\/(photo|diagram)\/((?:img|dgm)-\d+\.[a-z0-9]+)$/i;
+function normalizeAssetPaths(){
+  let moved=0;
+  const root=assetRoot();
+  usedAssetKeys().forEach(k=>{
+    const a=ASSETS[k]; if(!a||!a.path)return;
+    if(k==='ph'){ /* shared across manuals - re-derive it every time */
+      const want=root+'/placeholder.'+extOf(a.path);
+      if(a.path!==want){a.path=want;moved++;}
+      return;
+    }
+    if(/^others\//i.test(a.path)){ /* legacy pack - rescue it into the sequence */
+      a.path=nextAssetPath(extOf(a.path)); moved++; return;
+    }
+    const m=APP_NAMED.exec(a.path);
+    if(m&&m[1]!==root){ a.path=root+'/'+m[2]+'/'+m[3]; moved++; } /* keep its number */
+  });
+  return moved;
+}
 $('#fpick').addEventListener('change',e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f||!pendingRef)return;
   const rd=new FileReader();
   rd.onload=()=>{
-    doc.userSeq=(doc.userSeq||0)+1;
     const ext=(f.name.match(/\.([a-z0-9]+)$/i)||[,'png'])[1].toLowerCase();
-    const key='user'+doc.userSeq;
-    ASSETS[key]={path:'others/user-'+doc.userSeq+'.'+ext,data:rd.result};
-    setByPath(doc,pendingRef,key); pendingRef=null; dirty=true; pushHistory(); render(); toast('IMAGE REPLACED');
+    const path=nextAssetPath(ext), key=newAssetKey(path);
+    ASSETS[key]={path:path,data:rd.result};
+    setByPath(doc,pendingRef,key); pendingRef=null; dirty=true; pushHistory(); render();
+    toast('IMAGE REPLACED \u00b7 FILED AS '+path.toUpperCase());
   };
   rd.readAsDataURL(f);
 });
@@ -805,7 +871,7 @@ $('#page-root').addEventListener('click',e=>{
   else if(act==='del'){if(!confirm('Delete this block?'))return;blocks.splice(i,1);}
   else if(act==='dup'){blocks.splice(i+1,0,JSON.parse(JSON.stringify(blocks[i])));}
   else if(act==='add'){openAddMenu(b,i);return;}
-  else if(act==='additem'){const bl=blocks[i];const arr=(bl.type==='step')?(bl.extras=bl.extras||[]):(bl.items=bl.items||[]);arr.push({kind:'img',img:'ph',w:'30%',cap:''});}
+  else if(act==='additem'){const bl=blocks[i];const arr=(bl.type==='step')?(bl.extras=bl.extras||[]):(bl.items=bl.items||[]);arr.push({kind:'img',img:'ph',w:'37%',cap:''});}
   else if(act==='addrow'){blocks[i].rows.push(blocks[i].rows[0].map(()=>'&nbsp;'));}
   else if(act==='delrow'){if(blocks[i].rows.length>1)blocks[i].rows.pop();}
   else if(act==='numtog'){blocks[i].num=(blocks[i].num===false);}
@@ -883,6 +949,16 @@ $('#new-create').onclick=()=>{
     {type:'heading',text:'SECTION 1'},
     {type:'step',img:'ph',text:'First step description goes here.',extras:[]},
     {type:'warning',title:'WARNING',text:'Modifying suspension settings can significantly alter handling characteristics and may overload components if changes are extreme.<br><b>&middot; Only make adjustments within the recommended range.</b><br><b>&middot; After adjustments, ride slowly at first to get accustomed to the new handling.</b><br>Failure to comply with the manual may result in product failure, damage, property loss, or personal injury. Damage caused by tampering with or modifying chassis components is not covered by the warranty.'},
+    {type:'chead',text:'INTENDED USE'},
+    {type:'text',text:'This RACINGBROS suspension component is specifically designed for use in closed-course racing environments with approved vehicles. Any misuse, including the use of non-specified fluids or improper applications, will compromise safety and performance.'},
+    {type:'chead',text:'MAINTENANCE AND WARRANTY'},
+    {type:'text',text:'To maintain warranty coverage and ensure optimal performance, all service work must be carried out at a RACINGBROS Authorized Center, using only RACINGBROS-approved parts and accessories. The use of non-approved parts will void the warranty.'},
+    {type:'chead',text:'INSTALLATION AND TORQUE'},
+    {type:'text',text:'The suspension component must be installed according to the vehicle manufacturer\'s specifications. It is recommended that installation be performed by a RACINGBROS Authorized Center, adhering to the correct torque settings.'},
+    {type:'chead',text:'ENVIRONMENTAL RESPONSIBILITY'},
+    {type:'text',text:'All used fluids, lubricants, and components must be disposed of responsibly, in accordance with local environmental regulations.'},
+    {type:'chead',text:'CUSTOMER ASSISTANCE'},
+    {type:'text',text:'For any questions or support regarding your RACINGBROS suspension, please contact a RACINGBROS Authorized Center or visit the RACINGBROS website: www.racingbros.com'},
     {type:'footer',ig:'racingbros_official',web:'racingbros.com',igic:'icon_ig',webic:'icon_web'}
   ]};
   WS.docs.push(nd); dirty=true;
@@ -913,9 +989,15 @@ function spliceScript(src,id,json){
   return src.slice(0,open)+json+src.slice(close);
 }
 function buildSelf(){
+  /* The bundled editor carries just the manual being exported and just the
+     images it uses - matching project.json. Embedding the whole workspace
+     dragged every other open tab and every loaded asset into the pack. */
+  const keep={};
+  usedAssetKeys().forEach(k=>{ if(ASSETS[k])keep[k]=ASSETS[k]; });
+  if(ASSETS.ph&&!keep.ph)keep.ph=ASSETS.ph;
   let s=SRC;
-  s=spliceScript(s,'mc-state',enc(WS));
-  s=spliceScript(s,'mc-assets',enc(ASSETS));
+  s=spliceScript(s,'mc-state',enc({active:0,docs:[doc]}));
+  s=spliceScript(s,'mc-assets',enc(keep));
   return s;
 }
 function buildStandalone(title,urlOf){
@@ -930,7 +1012,8 @@ $('#exp-go').onclick=async()=>{
   if(!/\.html?$/i.test(nm))nm+='.html';
   const base=nm.replace(/\.html?$/i,'');
   doc.name=base; $('#doc-name').textContent=base;
-  toast('BUILDING ZIP PACK...');
+  const moved=normalizeAssetPaths();
+  toast(moved?'RE-FILING '+moved+' IMAGE(S) UNDER IMG/'+assetRoot().toUpperCase()+'/...':'BUILDING ZIP PACK...');
   try{
     const zip=new JSZip();
     zip.file(nm,buildStandalone(base));
@@ -1146,8 +1229,30 @@ $('#sb').addEventListener('click',e=>{
   const b=e.target.closest('[data-ins]'); if(!b)return;
   const t=b.dataset.ins;
   if(t==='csv'){$('#csv-ta').value='';$('#csv-ovl').classList.remove('hidden');$('#csv-ta').focus();return;}
+  if(t==='stepimg'){addStepImage();return;}
   insertBlock(INS[t]());
 });
+/* Add another image to a step. Same thing the block's +IMG control does,
+   but reachable from the sidebar so it isn't hidden behind a hover. Works on
+   whichever step is selected - or the last step in the manual if none is. */
+function addStepImage(){
+  let bi=null;
+  if(selBi!==null)bi=selBi;
+  else if(selU)bi=selU.bi;
+  else if(selIt){ const m=/^blocks\/(\d+)\//.exec(selIt.arr); if(m)bi=+m[1]; }
+  else if(selF){ const m=/^blocks\/(\d+)\//.exec(selF.path); if(m)bi=+m[1]; }
+  if(bi===null||!doc.blocks[bi]||doc.blocks[bi].type!=='step')
+    for(let i=doc.blocks.length-1;i>=0;i--)if(doc.blocks[i].type==='step'){bi=i;break;}
+  const b=doc.blocks[bi];
+  if(!b||b.type!=='step'){toast('NO STEP IN THIS MANUAL - INSERT ONE FIRST');return;}
+  (b.extras=b.extras||[]).push({kind:'img',img:'ph',w:'37%',cap:''});
+  selBi=bi; selIt=null; selU=null; selF=null;
+  dirty=true; pushHistory(); render();
+  const el=$('#page-root .blk[data-bi="'+bi+'"]');
+  if(el)el.scrollIntoView({block:'center',behavior:'smooth'});
+  toast('IMAGE ADDED TO STEP \u00b7 DOUBLE-CLICK IT TO REPLACE');
+}
+
 /* sliders: live preview while dragging, one history entry on release */
 [['ts','v-ts'],['mx','v-mx'],['my','v-my'],['sp','v-sp']].forEach(([k,vid])=>{
   const el=$('#sl-'+k);
