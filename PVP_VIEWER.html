@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PVP VIEWER</title>
+<style>
+  *{box-sizing:border-box;border-radius:0!important}
+  :root{
+    --ink:#000; --soft:#9a9a9a; --hair:#d5d5d5; --paper:#fff; --wash:#f2f2f2;
+    --font:Bahnschrift,"Bahnschrift Light","DIN Alternate","DIN Condensed","Segoe UI",Roboto,Arial,sans-serif;
+  }
+  html,body{height:100%}
+  body{margin:0;font-family:var(--font);font-size:13px;color:var(--ink);background:var(--paper);overflow:hidden}
+  button,input,select{font-family:var(--font);color:var(--ink)}
+
+  /* ---------- bars ---------- */
+  .bar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--paper);
+       border-bottom:1px solid var(--hair);flex-wrap:wrap}
+  .brand{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+         padding:0 12px 0 4px;white-space:nowrap}
+  .spacer{flex:1}
+  .stat{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);white-space:nowrap}
+
+  .btn{border:2px solid var(--ink);background:var(--paper);text-transform:uppercase;font-weight:700;
+       letter-spacing:.1em;font-size:12px;padding:8px 14px;cursor:pointer;line-height:1;white-space:nowrap}
+  .btn:hover{background:var(--ink);color:#fff}
+  .btn:disabled{border-color:var(--hair);color:var(--hair);cursor:default;background:#fff}
+  .btn:disabled:hover{background:#fff;color:var(--hair)}
+
+  .tool{border:1px solid transparent;background:var(--paper);text-transform:uppercase;font-weight:600;
+        letter-spacing:.09em;font-size:11.5px;padding:7px 10px;cursor:pointer;line-height:1;white-space:nowrap}
+  .tool:hover{background:var(--wash)}
+  .tool.on{background:var(--ink);color:#fff}
+  .sep{width:1px;align-self:stretch;background:var(--hair);margin:0 5px}
+
+  /* ---------- save menu ---------- */
+  .menu{position:relative}
+  .menupanel{position:absolute;top:100%;left:0;margin-top:6px;min-width:152px;background:var(--paper);
+             border:2px solid var(--ink);z-index:40;display:none}
+  .menupanel.open{display:block}
+  .menupanel button{display:block;width:100%;text-align:left;border:0;background:transparent;
+      padding:11px 16px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+  .menupanel button:hover{background:var(--ink);color:#fff}
+
+  /* ---------- tabs ---------- */
+  .tabs{padding:0 10px;gap:0}
+  .tab{display:flex;align-items:center;gap:9px;padding:12px 14px;border:1px solid var(--hair);
+       border-bottom:1px solid var(--paper);margin-bottom:-1px;background:var(--paper)}
+  .tab b{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+  .tab span{font-size:11px;letter-spacing:.12em;color:var(--soft);text-transform:uppercase}
+  .tab i{font-style:normal;color:var(--soft);cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
+  .tab i:hover{color:var(--ink)}
+  .tab.empty b{color:var(--soft)}
+  .tabadd{border:0;background:transparent;font-size:19px;line-height:1;padding:8px 14px;cursor:pointer;color:var(--ink)}
+  .tabadd:hover{background:var(--wash)}
+
+  /* ---------- numeric range fields ---------- */
+  .axgrp{display:flex;align-items:center;gap:5px}
+  .axgrp label{font-size:11.5px;font-weight:700;letter-spacing:.12em;padding-right:2px}
+  .axgrp input{width:74px;border:1px solid var(--hair);background:var(--paper);padding:6px 7px;
+               font-size:12px;text-align:center}
+  .axgrp input:focus{outline:0;border-color:var(--ink)}
+  .axgrp input::placeholder{color:var(--hair)}
+
+  /* ---------- layout ---------- */
+  #app{display:flex;height:calc(100% - 143px)}
+  aside{width:272px;min-width:272px;border-right:1px solid var(--hair);overflow-y:auto;padding:0 0 30px}
+  aside section{border-bottom:1px solid var(--hair);padding:14px}
+  aside h2{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--soft);
+           margin:0 0 10px;font-weight:700}
+  .fld{margin:9px 0}
+  .fld span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:4px}
+  select,input[type=number]{width:100%;border:1px solid var(--hair);background:var(--paper);
+      padding:7px 8px;font-size:12.5px}
+  select:focus,input:focus{outline:0;border-color:var(--ink)}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  .runrow{display:flex;align-items:flex-start;gap:9px;padding:7px 6px;cursor:pointer;border:1px solid transparent}
+  .runrow:hover{background:var(--wash)}
+  .runrow input{margin:2px 0 0}
+  .sw{width:22px;height:3px;flex:none;margin-top:6px}
+  .runrow .t b{display:block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .runrow .t em{font-style:normal;display:block;font-size:10.5px;letter-spacing:.06em;color:var(--soft);margin-top:2px}
+
+  .chk{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12px;
+       letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+
+  main{flex:1;display:flex;flex-direction:column;min-width:0}
+  #chartwrap{flex:1;position:relative;background:var(--paper);overflow:hidden}
+  canvas{display:block;width:100%;height:100%;cursor:crosshair}
+  #readout{position:absolute;top:0;right:0;background:var(--paper);border-left:1px solid var(--hair);
+      border-bottom:1px solid var(--hair);padding:8px 12px;font-size:11.5px;letter-spacing:.08em;
+      pointer-events:none;white-space:pre;display:none;text-transform:uppercase}
+  #foot{border-top:1px solid var(--hair);padding:9px 14px;display:flex;flex-wrap:wrap;gap:4px 22px;
+        font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+  #foot b{color:var(--ink);font-weight:700}
+
+  #drop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+        background:var(--paper);text-align:center;padding:24px;z-index:20}
+  #drop .inner{border:2px dashed var(--ink);padding:52px 60px;max-width:600px}
+  #drop h3{margin:0 0 10px;font-size:17px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+  #drop p{margin:6px 0;font-size:12px;letter-spacing:.08em;color:var(--soft);text-transform:uppercase}
+  #drop.hide{display:none}
+  #drop.over .inner{background:var(--wash)}
+  .err{background:#ffe8e8;border:1px solid var(--ink);padding:8px 10px;margin-top:14px;
+       font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;display:none;color:#000}
+  .err.show{display:block}
+  table.props{width:100%;border-collapse:collapse;font-size:11px}
+  table.props td{padding:4px 3px;border-bottom:1px solid var(--hair);letter-spacing:.04em}
+  table.props td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  details summary{cursor:pointer;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+</style>
+</head>
+<body>
+
+<div class="bar bar1">
+  <div class="brand">PVP Viewer</div>
+  <button class="btn" id="btnOpen">Open</button>
+  <div class="menu">
+    <button class="btn" id="btnSave" disabled>Save &#9662;</button>
+    <div class="menupanel" id="saveMenu">
+      <button data-fmt="png">PNG</button>
+      <button data-fmt="svg">SVG</button>
+      <button data-fmt="html">HTML</button>
+      <button data-fmt="csv">CSV</button>
+    </div>
+  </div>
+  <button class="btn" id="btnReset">Reset View</button>
+  <span class="spacer"></span>
+  <span class="stat" id="stat">No file</span>
+  <input type="file" id="file" accept=".pvp,.PVP" hidden>
+</div>
+
+<div class="bar tabs">
+  <div class="tab empty" id="tab"><b id="tabName">Untitled</b><span>PVP</span><i id="tabClose">&times;</i></div>
+  <button class="tabadd" id="tabAdd">+</button>
+</div>
+
+<div class="bar bar3">
+  <button class="tool" data-preset="fd">F &ndash; X</button>
+  <button class="tool" data-preset="fv">F &ndash; V</button>
+  <button class="tool" data-preset="ft">F &ndash; T</button>
+  <button class="tool" data-preset="dt">X &ndash; T</button>
+  <button class="tool" data-preset="vt">V &ndash; T</button>
+  <button class="tool" data-preset="pvp">PVP</button>
+  <span class="sep"></span>
+  <button class="tool" data-cyc="all">All</button>
+  <button class="tool" data-cyc="first">First</button>
+  <button class="tool" data-cyc="last">Last</button>
+  <span class="sep"></span>
+  <button class="tool" data-opt="simplify">Simplify</button>
+  <button class="tool" data-opt="grid">Grid</button>
+  <button class="tool" data-opt="zero">Zero</button>
+  <button class="tool" data-opt="legend">Legend</button>
+  <button class="tool" data-opt="dots">Dots</button>
+  <span class="sep"></span>
+  <div class="axgrp">
+    <label>X</label>
+    <input id="xmin" placeholder="&mdash;"><input id="xmax" placeholder="&mdash;">
+    <label style="padding-left:8px">Y</label>
+    <input id="ymin" placeholder="&mdash;"><input id="ymax" placeholder="&mdash;">
+  </div>
+</div>
+
+<div id="app">
+  <aside>
+    <section>
+      <h2>Axes</h2>
+      <div class="g2">
+        <div class="fld"><span>X</span><select id="xch"></select></div>
+        <div class="fld"><span>Y</span><select id="ych"></select></div>
+      </div>
+    </section>
+    <section>
+      <h2>Units</h2>
+      <div class="g2">
+        <div class="fld"><span>Force</span>
+          <select id="uForce"><option>kgf</option><option>lbf</option><option>N</option></select></div>
+        <div class="fld"><span>Length</span>
+          <select id="uLen"><option>mm</option><option>cm</option><option>in</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><span>Velocity</span>
+          <select id="uVel"><option>mm/sec</option><option>cm/sec</option><option>in/sec</option></select></div>
+        <div class="fld"><span>Temp</span>
+          <select id="uTemp"><option>&deg;C</option><option>&deg;F</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="invVel"> Invert velocity sign</label>
+    </section>
+    <section>
+      <h2>Runs</h2>
+      <div id="runs"><p class="stat">No file loaded</p></div>
+      <div class="g2" style="margin-top:8px">
+        <button class="tool" style="border-color:var(--hair)" id="allOn">All</button>
+        <button class="tool" style="border-color:var(--hair)" id="allOff">None</button>
+      </div>
+    </section>
+    <section>
+      <h2>Line</h2>
+      <div class="fld"><span>Width</span><input type="number" id="lw" value="1.2" min="0.4" max="4" step="0.1"></div>
+      <p class="stat" style="letter-spacing:.06em;line-height:1.8;white-space:normal">
+        Wheel &rarr; zoom &middot; Shift+wheel &rarr; X &middot; Alt+wheel &rarr; Y<br>
+        Drag &rarr; box zoom &middot; Middle-drag &rarr; pan &middot; Dbl-click &rarr; reset</p>
+    </section>
+    <section id="propsBox" hidden>
+      <h2>Session properties</h2>
+      <details><summary>Show values</summary><div id="props"></div></details>
+    </section>
+  </aside>
+
+  <main>
+    <div id="chartwrap">
+      <canvas id="cv"></canvas>
+      <div id="readout"></div>
+      <div id="drop"><div class="inner">
+        <h3>Drop a .PVP file</h3>
+        <p>or <button class="btn" id="btnOpen2" style="margin:0 4px">Choose file</button></p>
+        <p>Roehrig ShockView / Shock 6.x session &middot; parsed locally, nothing uploaded</p>
+        <div class="err" id="err"></div>
+      </div></div>
+    </div>
+    <div id="foot"></div>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   1. Minimal OLE2 / CFB (compound file) reader
+   ============================================================ */
+function cfbRead(buf){
+  const dv=new DataView(buf);
+  const SIG=[0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1];
+  if(buf.byteLength<512) throw new Error("File too small to be a .pvp session file.");
+  for(let i=0;i<8;i++) if(dv.getUint8(i)!==SIG[i]) throw new Error("Not an OLE compound file — this does not look like a .pvp session file.");
+  const sectorSize=1<<dv.getUint16(30,true);
+  const miniSectorSize=1<<dv.getUint16(32,true);
+  const nFatSectors=dv.getUint32(44,true);
+  const dirStart=dv.getUint32(48,true);
+  const miniCutoff=dv.getUint32(56,true);
+  const miniFatStart=dv.getUint32(60,true);
+  const nMiniFat=dv.getUint32(64,true);
+  const difatStart=dv.getUint32(68,true);
+  const nDifat=dv.getUint32(72,true);
+  const END=0xfffffffe, FREE=0xffffffff;
+  const secOff=s=>512+s*sectorSize;
+
+  const difat=[];
+  for(let i=0;i<109;i++){const v=dv.getUint32(76+i*4,true); if(v===FREE||v===END) break; difat.push(v);}
+  let ds=difatStart,g=0;
+  while(ds!==END&&ds!==FREE&&g++<nDifat+8){
+    const base=secOff(ds), per=sectorSize/4-1;
+    for(let i=0;i<per;i++){const v=dv.getUint32(base+i*4,true); if(v!==FREE&&v!==END) difat.push(v);}
+    ds=dv.getUint32(base+per*4,true);
+  }
+  const fat=new Uint32Array(Math.max(difat.length,nFatSectors)*(sectorSize/4));
+  let k=0;
+  for(const s of difat){const base=secOff(s); for(let i=0;i<sectorSize/4;i++) fat[k++]=dv.getUint32(base+i*4,true);}
+
+  const chain=(start,arr)=>{const out=[];let s=start,n=0;
+    while(s!==END&&s!==FREE&&s<arr.length&&n++<5e6){out.push(s);s=arr[s];} return out;};
+  const readChain=(start,size)=>{
+    const secs=chain(start,fat), out=new Uint8Array(size); let p=0;
+    for(const s of secs){const n=Math.min(sectorSize,size-p); if(n<=0)break;
+      out.set(new Uint8Array(buf,secOff(s),n),p); p+=n;}
+    return out;};
+
+  const entries=[];
+  for(const s of chain(dirStart,fat)){
+    for(let e=0;e<sectorSize/128;e++){
+      const o=secOff(s)+e*128, nameLen=dv.getUint16(o+64,true), type=dv.getUint8(o+66);
+      if(type===0) continue;
+      let name="";
+      for(let i=0;i<Math.max(0,nameLen/2-1);i++) name+=String.fromCharCode(dv.getUint16(o+i*2,true));
+      entries.push({name,type,start:dv.getUint32(o+116,true),
+        size:dv.getUint32(o+120,true)+dv.getUint32(o+124,true)*4294967296});
+    }
+  }
+  const root=entries.find(e=>e.type===5);
+  let miniFat=null, miniStream=null;
+  if(root&&nMiniFat>0){
+    const mfs=chain(miniFatStart,fat);
+    miniFat=new Uint32Array(mfs.length*(sectorSize/4)); let j=0;
+    for(const s of mfs) for(let i=0;i<sectorSize/4;i++) miniFat[j++]=dv.getUint32(secOff(s)+i*4,true);
+    miniStream=readChain(root.start,root.size);
+  }
+  const read=e=>{
+    if(e.size<miniCutoff&&e.type!==5&&miniStream){
+      const out=new Uint8Array(e.size); let p=0;
+      for(const s of chain(e.start,miniFat)){
+        const n=Math.min(miniSectorSize,e.size-p); if(n<=0)break;
+        out.set(miniStream.subarray(s*miniSectorSize,s*miniSectorSize+n),p); p+=n;}
+      return out;
+    }
+    return readChain(e.start,e.size);
+  };
+  return {entries,read};
+}
+
+/* ============================================================
+   2. Unit codes (Roehrig Shock / ShockView)
+   ============================================================ */
+const UNITS={0:"",1:"in",2:"ft",3:"cm",4:"mm",5:"in/sec",6:"ft/sec",7:"cm/sec",8:"mm/sec",
+  9:"lbf",10:"N",11:"kgf",12:"°F",13:"°C",14:"kPa",15:"Hz",16:"psi",17:"bar",18:"°",19:"sec",
+  65:"",68:""};
+const QUANT={1:"len",2:"len",3:"len",4:"len",5:"vel",6:"vel",7:"vel",8:"vel",
+  9:"force",10:"force",11:"force",12:"temp",13:"temp",19:"time",15:"freq"};
+const TO_BASE={1:v=>v*25.4,2:v=>v*304.8,3:v=>v*10,4:v=>v,
+  5:v=>v*25.4,6:v=>v*304.8,7:v=>v*10,8:v=>v,
+  9:v=>v*0.45359237,10:v=>v/9.80665,11:v=>v,
+  12:v=>(v-32)*5/9,13:v=>v};
+const FROM_BASE={"mm":v=>v,"cm":v=>v/10,"in":v=>v/25.4,
+  "mm/sec":v=>v,"cm/sec":v=>v/10,"in/sec":v=>v/25.4,
+  "kgf":v=>v,"lbf":v=>v/0.45359237,"N":v=>v*9.80665,
+  "°C":v=>v,"°F":v=>v*9/5+32};
+
+/* ============================================================
+   3. PVP session-stream parser
+   ============================================================ */
+function parsePVP(arrayBuffer){
+  const cfb=cfbRead(arrayBuffer);
+  const ent=cfb.entries.find(e=>e.type===2&&/session/i.test(e.name))
+          ||cfb.entries.filter(e=>e.type===2).sort((a,b)=>b.size-a.size)[0];
+  if(!ent) throw new Error("No data stream found inside the .pvp container.");
+  const u8=cfb.read(ent);
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+  const len=u8.byteLength; let o=0;
+  const U=()=>{const v=dv.getUint32(o,true);o+=4;return v;};
+  const F=()=>{const v=dv.getFloat32(o,true);o+=4;return v;};
+  const D=()=>{const v=dv.getFloat64(o,true);o+=8;return v;};
+  const S=()=>{const L=U(); if(L>8192||o+L>len) throw new Error("bad string");
+    let s=""; for(let i=0;i<L;i++) s+=String.fromCharCode(u8[o+i]); o+=L; return s;};
+  const propBlock=()=>{
+    const num={},str={};
+    let n=U(); if(n>8192) throw new Error("bad prop count");
+    for(let i=0;i<n;i++){const k=S(); num[k]={v:F(),u:U()};}
+    let m=U(); if(m>8192) throw new Error("bad text count");
+    for(let i=0;i<m;i++){const k=S(); str[k]=S();}
+    return {num,str};
+  };
+  const chanBlock=()=>{
+    const n=U(); if(n>512) throw new Error("bad channel count");
+    const ch={};
+    for(let i=0;i<n;i++){
+      const name=S(),rate=U(),unit=U(),flag=U(),cnt=U();
+      if(cnt>4e7||o+cnt*4>len) throw new Error("bad sample count");
+      const vals=new Float32Array(cnt);
+      for(let j=0;j<cnt;j++) vals[j]=dv.getFloat32(o+j*4,true);
+      o+=cnt*4;
+      ch[name]={name,rate,unit,flag,vals};
+    }
+    return ch;
+  };
+
+  const fileVersion=U(), runCount=U(), sessionId=U();
+  const oleDate=D(); U(); F(); U();
+  const session=propBlock();
+  const typeName=S(); o+=16;
+  const typeVersion=U(); o+=1; U(); U(); U();
+  const method=propBlock();
+  const summary=chanBlock();
+
+  const runs=[];
+  const want=(runCount>0&&runCount<4096)?runCount:1e9;
+  while(runs.length<want&&o<len-20){
+    const save=o;
+    try{
+      U(); o+=1; U(); U(); U();
+      const p=propBlock(), ch=chanBlock();
+      if(!Object.keys(ch).length) throw new Error("empty");
+      runs.push({index:runs.length+1,props:p.num,info:p.str,channels:ch,cycles:null});
+    }catch(err){ o=save; break; }
+  }
+  if(!runs.length) throw new Error("No runs could be decoded from this file.");
+  const testDate=new Date(Date.UTC(1899,11,30)+Math.round(oleDate*86400000));
+  return {streamName:ent.name,fileVersion,sessionId,typeName,typeVersion,testDate,
+    session:session.num,sessionInfo:session.str,method:method.num,methodInfo:method.str,
+    summary,runs};
+}
+
+/* ============================================================
+   4. State
+   ============================================================ */
+const PALETTE=["#00C000","#0000FF","#006400","#FF0000","#FF9900","#9400D3","#00A0A0",
+               "#B8860B","#FF00FF","#555555","#0080FF","#8B4513"];
+const CFONT='Bahnschrift, "Segoe UI", Arial, sans-serif';
+const opt={preset:"fd",cycles:"all",grid:true,zero:true,legend:false,dots:false,simplify:false};
+let doc=null, fileName="", selected=new Set(), zoom=null;
+const $=id=>document.getElementById(id);
+const cv=$("cv"), ctx=cv.getContext("2d");
+
+function chanList(){
+  if(!doc||!doc.runs.length) return [];
+  const s=new Set();
+  for(const r of doc.runs) for(const k of Object.keys(r.channels)) s.add(k);
+  return [...s];
+}
+function targetUnit(u){
+  const q=QUANT[u];
+  if(q==="len") return $("uLen").value;
+  if(q==="vel") return $("uVel").value;
+  if(q==="force") return $("uForce").value;
+  if(q==="temp") return $("uTemp").value;
+  return UNITS[u]||"";
+}
+function conv(u){
+  const q=QUANT[u];
+  if(!q||!TO_BASE[u]) return v=>v;
+  const t=targetUnit(u), f=FROM_BASE[t], b=TO_BASE[u];
+  if(!f) return v=>v;
+  const sign=(q==="vel"&&$("invVel").checked)?-1:1;
+  return v=>sign*f(b(v));
+}
+
+/* cycle boundaries: velocity sign with separate +/- thresholds (variable-sine safe) */
+function cycles(run){
+  if(run.cycles) return run.cycles;
+  const vch=run.channels.Velocity, dch=run.channels.Displacement;
+  const src=vch?vch.vals:null, dv=dch?dch.vals:null;
+  const n=(src||dv||{length:0}).length;
+  if(!n){ run.cycles=[[0,0]]; return run.cycles; }
+  const sig=new Float32Array(n);
+  for(let i=0;i<n;i++) sig[i]= src? src[i] : (i? dv[i]-dv[i-1] : 0);
+  let up=0,dn=0;
+  for(let i=0;i<n;i++){ if(sig[i]>up) up=sig[i]; if(sig[i]<dn) dn=sig[i]; }
+  const thrUp=up*0.2, thrDn=dn*0.2;
+  const out=[]; let start=0, state=0, sawDn=false; const min=20;
+  for(let i=0;i<n;i++){
+    if(sig[i]>thrUp){
+      if(state===-1&&sawDn&&i-start>min){ out.push([start,i]); start=i; sawDn=false; }
+      state=1;
+    } else if(sig[i]<thrDn){ state=-1; sawDn=true; }
+  }
+  if(sawDn&&n-start>min) out.push([start,n]);
+  run.cycles=out.length?out:[[0,n]];
+  return run.cycles;
+}
+function rangeFor(run,mode){
+  const n=(run.channels.Displacement||Object.values(run.channels)[0]).vals.length;
+  if(mode==="all") return [[0,n]];
+  const c=cycles(run);
+  return mode==="last"?[c[c.length-1]]:[c[0]];
+}
+
+/* ============================================================
+   5. Simplify — collapse overlaid cycles into one clean loop
+   ============================================================ */
+function splitMonotone(pts,eps){
+  const out=[]; if(pts.length<3) return out;
+  let dir=0,start=0,pivot=pts[0][0];
+  for(let i=1;i<pts.length;i++){
+    const x=pts[i][0];
+    if(dir===0){
+      if(x>pivot+eps){dir=1;pivot=x;}
+      else if(x<pivot-eps){dir=-1;pivot=x;}
+    } else if(dir>0){
+      if(x>pivot) pivot=x;
+      else if(x<pivot-eps){ out.push({dir:dir,a:start,b:i}); start=i-1; dir=-1; pivot=x; }
+    } else {
+      if(x<pivot) pivot=x;
+      else if(x>pivot+eps){ out.push({dir:dir,a:start,b:i}); start=i-1; dir=1; pivot=x; }
+    }
+  }
+  if(dir!==0) out.push({dir:dir,a:start,b:pts.length});
+  return out;
+}
+function interpAt(sorted,x){
+  let lo=0,hi=sorted.length-1;
+  if(x<=sorted[0][0]) return sorted[0][1];
+  if(x>=sorted[hi][0]) return sorted[hi][1];
+  while(hi-lo>1){ const m=(lo+hi)>>1; if(sorted[m][0]<=x) lo=m; else hi=m; }
+  const a=sorted[lo],b=sorted[hi], t=(b[0]-a[0])||1e-12;
+  return a[1]+(b[1]-a[1])*(x-a[0])/t;
+}
+function averageBranch(list,N){
+  let lo=Infinity,hi=-Infinity;
+  for(const b of list) for(const p of b){ if(p[0]<lo)lo=p[0]; if(p[0]>hi)hi=p[0]; }
+  if(!(hi>lo)) return null;
+  const sorted=list.map(b=>b.slice().sort((p,q)=>p[0]-q[0]));
+  const span=sorted.map(b=>[b[0][0],b[b.length-1][0]]);
+  const res=[];
+  for(let i=0;i<N;i++){
+    const x=lo+(hi-lo)*i/(N-1);
+    let sum=0,cnt=0;
+    for(let j=0;j<sorted.length;j++){
+      if(x<span[j][0]||x>span[j][1]) continue;
+      sum+=interpAt(sorted[j],x); cnt++;
+    }
+    if(cnt) res.push([x,sum/cnt]);
+  }
+  return res.length>1?res:null;
+}
+function simplifySegs(segs){
+  let lo=Infinity,hi=-Infinity;
+  for(const s of segs) for(const p of s){ if(p[0]<lo)lo=p[0]; if(p[0]>hi)hi=p[0]; }
+  if(!(hi>lo)) return segs;
+  const eps=(hi-lo)*0.02;
+  const up=[],dn=[];
+  for(const s of segs) for(const b of splitMonotone(s,eps)){
+    const arr=s.slice(b.a,b.b);
+    if(arr.length<15) continue;
+    (b.dir>0?up:dn).push(arr);
+  }
+  const A=up.length?averageBranch(up,500):null;
+  const B=dn.length?averageBranch(dn,500):null;
+  if(!A&&!B) return segs;
+  if(!A) return [B];
+  if(!B) return [A];
+  const loop=A.concat(B.slice().reverse());
+  loop.push(A[0]);                        /* close the hysteresis loop */
+  return [loop];
+}
+
+/* ============================================================
+   6. Series assembly
+   ============================================================ */
+function buildSeries(){
+  if(!doc) return null;
+  const out={series:[],xLabel:"",yLabel:"",title:""};
+
+  if(opt.preset==="pvp"){
+    const sx=doc.summary.Velocity, sy=doc.summary.Force;
+    if(!sx||!sy) return null;
+    const cx=conv(sx.unit), cy=conv(sy.unit);
+    const pts=[];
+    for(let i=0;i<sx.vals.length;i++) pts.push([cx(sx.vals[i]),cy(sy.vals[i])]);
+    pts.sort((a,b)=>a[0]-b[0]);
+    out.series.push({name:"Peak velocity plot",color:PALETTE[3],pts:[pts],dots:true});
+    out.xLabel="Velocity ("+targetUnit(sx.unit)+")";
+    out.yLabel="Force ("+targetUnit(sy.unit)+")";
+    out.title="Peak Force Vs. Peak Velocity";
+    return out;
+  }
+
+  const xk=$("xch").value, yk=$("ych").value;
+  for(const run of doc.runs){
+    if(!selected.has(run.index)) continue;
+    const xIsTime=xk==="__time", yIsTime=yk==="__time";
+    const xc=xIsTime?null:run.channels[xk];
+    const yc=yIsTime?null:run.channels[yk];
+    if((!xc&&!xIsTime)||(!yc&&!yIsTime)) continue;
+    const ref=xc||yc, rate=ref.rate>0?ref.rate:1;
+    const fx=xIsTime?(i=>i/rate):conv(xc.unit);
+    const fy=yIsTime?(i=>i/rate):conv(yc.unit);
+    let segs=[];
+    for(const ab of rangeFor(run,opt.cycles)){
+      const pts=new Array(ab[1]-ab[0]);
+      for(let i=ab[0];i<ab[1];i++)
+        pts[i-ab[0]]=[ xIsTime?fx(i):fx(xc.vals[i]), yIsTime?fy(i):fy(yc.vals[i]) ];
+      segs.push(pts);
+    }
+    if(opt.simplify&&!xIsTime){
+      const all=[];
+      const list=(opt.cycles==="all")?cycles(run):rangeFor(run,opt.cycles);
+      for(const ab of list){
+        const pts=new Array(ab[1]-ab[0]);
+        for(let i=ab[0];i<ab[1];i++)
+          pts[i-ab[0]]=[ fx(xc.vals[i]), yIsTime?fy(i):fy(yc.vals[i]) ];
+        all.push(pts);
+      }
+      segs=simplifySegs(all);
+    }
+    out.series.push({name:label(run),color:PALETTE[(run.index-1)%PALETTE.length],pts:segs,run:run});
+  }
+  out.xLabel=xk==="__time"?"Time (sec)":axisName(xk);
+  out.yLabel=yk==="__time"?"Time (sec)":axisName(yk);
+  out.title=(yk==="__time"?"Time":yk)+" Vs. "+(xk==="__time"?"Time":xk);
+  return out;
+}
+function axisName(k){
+  for(const r of doc.runs){ const c=r.channels[k]; if(c) return k+" ("+targetUnit(c.unit)+")"; }
+  return k;
+}
+function label(run){
+  const L=run.info.RunLabel||("Run "+run.index);
+  const m=L.match(/\(([^)]*)\)\s*-\s*\(([^)]*)\)/);
+  if(!m) return L;
+  const trim=s=>String(parseFloat(String(s).replace(/,/g,"")));
+  const part=s=>{ const q=/^\s*([\d.,]+)\s*(\S+)\s*,\s*([\d.,]+)\s*(\S+)\s*$/.exec(s);
+    return q?{stroke:trim(q[1]),su:q[2],speed:trim(q[3]),vu:q[4]}:null; };
+  const a=part(m[1]), b=part(m[2]);
+  if(!a) return m[1]+" / "+m[2];
+  return a.stroke+" "+a.su+" · "+a.speed+(b?" / "+b.speed:"")+" "+a.vu;
+}
+
+/* ============================================================
+   7. Chart renderer (canvas API — also drives the SVG writer)
+   ============================================================ */
+function niceStep(range,targetTicks){
+  if(!(range>0)) return 1;
+  const raw=range/Math.max(2,targetTicks);
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const n=raw/mag;
+  return (n<1.5?1:n<3?2:n<7?5:10)*mag;
+}
+function decFor(step){ return step>=10?0:step>=1?1:step>=0.1?2:step>=0.01?3:4; }
+function growStep(step){
+  const mag=Math.pow(10,Math.floor(Math.log10(step)+1e-9));
+  const n=step/mag;
+  return (n<1.5?2:n<3?5:10)*mag;
+}
+
+function render(c,W,H,data){
+  c.save();
+  c.fillStyle="#ffffff"; c.fillRect(0,0,W,H);
+  if(!data) data=buildSeries();
+  if(!data||!data.series.length){ c.restore(); return null; }
+
+  const fs=Math.max(10,Math.min(20,W/85));
+  const titleFs=fs*1.6, axFs=fs*0.95;
+  const L=fs*5.4, R=fs*1.6, T=titleFs*2.0, B=fs*6.0;
+  const px=L, py=T, pw=W-L-R, ph=H-T-B;
+  if(pw<40||ph<40){ c.restore(); return null; }
+
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+  for(const s of data.series) for(const seg of s.pts) for(const p of seg){
+    if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0];
+    if(p[1]<y0)y0=p[1]; if(p[1]>y1)y1=p[1];
+  }
+  if(!isFinite(x0)){ c.restore(); return null; }
+  if(x1===x0){x0-=1;x1+=1;} if(y1===y0){y0-=1;y1+=1;}
+  const auto={x0:x0,x1:x1,y0:y0,y1:y1};
+  if(zoom){ x0=zoom.x0;x1=zoom.x1;y0=zoom.y0;y1=zoom.y1; }
+
+  const sx=v=>px+(v-x0)/(x1-x0)*pw;
+  const sy=v=>py+ph-(v-y0)/(y1-y0)*ph;
+
+  let xStep=niceStep(x1-x0,Math.max(4,Math.round(pw/(fs*2.7))));
+  let yStep=niceStep(y1-y0,Math.max(4,Math.round(ph/(fs*4.4))));
+  c.font=fs+"px "+CFONT;
+  for(let g=0;g<14;g++){
+    const d=decFor(xStep);
+    const w=Math.max(c.measureText(x0.toFixed(d)).width,c.measureText(x1.toFixed(d)).width);
+    if(pw/((x1-x0)/xStep)>w*1.35) break;
+    xStep=growStep(xStep);
+  }
+  for(let g=0;g<14;g++){
+    if(ph/((y1-y0)/yStep)>fs*1.7) break;
+    yStep=growStep(yStep);
+  }
+  const xDec=decFor(xStep), yDec=decFor(yStep);
+
+  c.lineWidth=0.8; c.textBaseline="middle";
+  const xt=[],yt=[];
+  for(let v=Math.ceil(x0/xStep)*xStep; v<=x1+1e-9; v+=xStep) xt.push(+v.toFixed(10));
+  for(let v=Math.ceil(y0/yStep)*yStep; v<=y1+1e-9; v+=yStep) yt.push(+v.toFixed(10));
+
+  if(opt.grid){
+    c.strokeStyle="#c9c9c9"; c.beginPath();
+    for(const v of xt){ const X=Math.round(sx(v))+0.5; c.moveTo(X,py); c.lineTo(X,py+ph); }
+    for(const v of yt){ const Y=Math.round(sy(v))+0.5; c.moveTo(px,Y); c.lineTo(px+pw,Y); }
+    c.stroke();
+  }
+  if(opt.zero){
+    c.strokeStyle="#8a8a8a"; c.beginPath();
+    if(0>x0&&0<x1){ const X=Math.round(sx(0))+0.5; c.moveTo(X,py); c.lineTo(X,py+ph); }
+    if(0>y0&&0<y1){ const Y=Math.round(sy(0))+0.5; c.moveTo(px,Y); c.lineTo(px+pw,Y); }
+    c.stroke();
+  }
+
+  c.strokeStyle="#b0b0b0"; c.fillStyle="#111"; c.textAlign="right";
+  for(const v of yt){
+    const Y=Math.round(sy(v))+0.5;
+    c.beginPath(); c.moveTo(px-fs*0.45,Y); c.lineTo(px,Y); c.stroke();
+    if(Math.abs(Y-py)<fs*1.6||Math.abs(Y-(py+ph))<fs*1.6) continue;
+    c.fillText(v.toFixed(yDec),px-fs*0.75,Y);
+  }
+  c.textAlign="center"; c.textBaseline="top";
+  for(const v of xt){
+    const X=Math.round(sx(v))+0.5;
+    c.beginPath(); c.moveTo(X,py+ph); c.lineTo(X,py+ph+fs*0.4); c.stroke();
+    if(Math.abs(X-px)<fs*0.6||Math.abs(X-(px+pw))<fs*0.6) continue;
+    c.fillText(v.toFixed(xDec),X,py+ph+fs*0.75);
+  }
+
+  const eX=xDec+1, eY=yDec+1;
+  c.textAlign="right"; c.textBaseline="top"; c.strokeStyle="#b0b0b0";
+  c.beginPath(); c.moveTo(px-fs*0.45,py+0.5); c.lineTo(px,py+0.5); c.stroke();
+  c.fillText(y1.toFixed(eY),px-fs*0.75,py+fs*0.15);
+  c.textBaseline="bottom";
+  c.beginPath(); c.moveTo(px-fs*0.45,py+ph+0.5); c.lineTo(px,py+ph+0.5); c.stroke();
+  c.fillText(y0.toFixed(eY),px-fs*0.75,py+ph+fs*0.15);
+  c.textBaseline="top"; c.textAlign="center";
+  c.fillText(x0.toFixed(eX),px,py+ph+fs*2.3);
+  c.fillText(x1.toFixed(eX),px+pw,py+ph+fs*2.3);
+
+  c.strokeStyle="#333"; c.lineWidth=1;
+  c.strokeRect(Math.round(px)+0.5,Math.round(py)+0.5,Math.round(pw),Math.round(ph));
+
+  c.save();
+  c.beginPath(); c.rect(px,py,pw,ph); c.clip();
+  const lw=Math.max(0.4,parseFloat($("lw").value)||1.2);
+  c.lineJoin="round"; c.lineCap="round";
+  for(const s of data.series){
+    c.strokeStyle=s.color; c.lineWidth=lw;
+    for(const seg of s.pts){
+      if(!seg||!seg.length) continue;
+      c.beginPath();
+      let lx=NaN,ly=NaN;
+      for(let i=0;i<seg.length;i++){
+        const X=sx(seg[i][0]), Y=sy(seg[i][1]);
+        if(i&&Math.abs(X-lx)<0.35&&Math.abs(Y-ly)<0.35&&i!==seg.length-1) continue;
+        i?c.lineTo(X,Y):c.moveTo(X,Y);
+        lx=X;ly=Y;
+      }
+      c.stroke();
+      if(opt.dots||s.dots){
+        c.fillStyle=s.color;
+        for(const p of seg){ c.beginPath(); c.arc(sx(p[0]),sy(p[1]),lw*1.9,0,6.2832); c.fill(); }
+      }
+    }
+  }
+  c.restore();
+
+  c.fillStyle="#111"; c.textAlign="center"; c.textBaseline="alphabetic";
+  c.font=titleFs+"px "+CFONT;
+  c.fillText(data.title,px+pw/2,T*0.62);
+  c.font=axFs+"px "+CFONT;
+  c.fillText(data.xLabel,px+pw/2,H-B*0.18);
+  c.save(); c.translate(fs*1.05,py+ph/2); c.rotate(-Math.PI/2);
+  c.fillText(data.yLabel,0,0); c.restore();
+
+  if(opt.legend&&data.series.length){
+    c.font=(fs*0.92)+"px "+CFONT;
+    let wMax=0;
+    for(const s of data.series) wMax=Math.max(wMax,c.measureText(s.name).width);
+    const bw=wMax+fs*3.4, bh=data.series.length*fs*1.5+fs*0.8;
+    const bx=px+pw-bw-fs*0.8, by=py+fs*0.8;
+    c.fillStyle="#ffffff"; c.strokeStyle="#333"; c.lineWidth=0.8;
+    c.fillRect(bx,by,bw,bh); c.strokeRect(bx+0.5,by+0.5,bw,bh);
+    c.textAlign="left"; c.textBaseline="middle";
+    data.series.forEach(function(s,i){
+      const Y=by+fs*0.9+i*fs*1.5;
+      c.strokeStyle=s.color; c.lineWidth=lw*1.6;
+      c.beginPath(); c.moveTo(bx+fs*0.5,Y); c.lineTo(bx+fs*2.3,Y); c.stroke();
+      c.fillStyle="#222"; c.fillText(s.name,bx+fs*2.7,Y);
+    });
+  }
+  c.restore();
+  return {px:px,py:py,pw:pw,ph:ph,x0:x0,x1:x1,y0:y0,y1:y1,auto:auto,data:data};
+}
+
+/* ============================================================
+   8. SVG context shim — replays the same render() into SVG
+   ============================================================ */
+function SVGCtx(W,H){
+  const meas=document.createElement("canvas").getContext("2d");
+  const out=[],defs=[];
+  let m=[1,0,0,1,0,0], stack=[], openGroups=0, id=0, d="";
+  const S=this;
+  S.fillStyle="#000"; S.strokeStyle="#000"; S.lineWidth=1;
+  S.font="10px "+CFONT; S.textAlign="left"; S.textBaseline="alphabetic";
+  S.lineJoin="miter"; S.lineCap="butt";
+  const n=v=>Math.abs(v)<1e-6?"0":String(+v.toFixed(2));
+  const pt=(x,y)=>[m[0]*x+m[2]*y+m[4], m[1]*x+m[3]*y+m[5]];
+  const scale=()=>Math.sqrt(Math.abs(m[0]*m[3]-m[1]*m[2]))||1;
+  /* quotes MUST be escaped too — font-family values contain them and a bare "
+     inside an attribute makes the standalone .svg fail XML parsing */
+  const esc2=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                         .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const mul=(a,b)=>[a[0]*b[0]+a[2]*b[1], a[1]*b[0]+a[3]*b[1],
+                    a[0]*b[2]+a[2]*b[3], a[1]*b[2]+a[3]*b[3],
+                    a[0]*b[4]+a[2]*b[5]+a[4], a[1]*b[4]+a[3]*b[5]+a[5]];
+
+  S.save=function(){ stack.push({m:m.slice(),f:S.fillStyle,s:S.strokeStyle,w:S.lineWidth,
+    fo:S.font,ta:S.textAlign,tb:S.textBaseline,g:openGroups}); openGroups=0; };
+  S.restore=function(){ const p=stack.pop(); if(!p) return;
+    for(let i=0;i<openGroups;i++) out.push("</g>");
+    openGroups=p.g; m=p.m; S.fillStyle=p.f; S.strokeStyle=p.s; S.lineWidth=p.w;
+    S.font=p.fo; S.textAlign=p.ta; S.textBaseline=p.tb; };
+  S.translate=function(x,y){ m=mul(m,[1,0,0,1,x,y]); };
+  S.rotate=function(r){ m=mul(m,[Math.cos(r),Math.sin(r),-Math.sin(r),Math.cos(r),0,0]); };
+  S.beginPath=function(){ d=""; };
+  S.moveTo=function(x,y){ const p=pt(x,y); d+="M"+n(p[0])+" "+n(p[1]); };
+  S.lineTo=function(x,y){ const p=pt(x,y); d+="L"+n(p[0])+" "+n(p[1]); };
+  S.rect=function(x,y,w,h){ const a=pt(x,y),b=pt(x+w,y),c2=pt(x+w,y+h),e=pt(x,y+h);
+    d+="M"+n(a[0])+" "+n(a[1])+"L"+n(b[0])+" "+n(b[1])+"L"+n(c2[0])+" "+n(c2[1])+
+       "L"+n(e[0])+" "+n(e[1])+"Z"; };
+  S.arc=function(x,y,r){ const p=pt(x,y), rr=r*scale();
+    d+="M"+n(p[0]-rr)+" "+n(p[1])+"a"+n(rr)+" "+n(rr)+" 0 1 0 "+n(rr*2)+" 0a"+
+       n(rr)+" "+n(rr)+" 0 1 0 "+n(-rr*2)+" 0"; };
+  S.stroke=function(){ if(!d) return;
+    out.push('<path d="'+d+'" fill="none" stroke="'+S.strokeStyle+'" stroke-width="'+
+      n(S.lineWidth*scale())+'" stroke-linejoin="'+S.lineJoin+'" stroke-linecap="'+S.lineCap+'"/>'); };
+  S.fill=function(){ if(!d) return; out.push('<path d="'+d+'" fill="'+S.fillStyle+'" stroke="none"/>'); };
+  S.fillRect=function(x,y,w,h){ const k=d; S.beginPath(); S.rect(x,y,w,h); S.fill(); d=k; };
+  S.strokeRect=function(x,y,w,h){ const k=d; S.beginPath(); S.rect(x,y,w,h); S.stroke(); d=k; };
+  S.clip=function(){ const cid="clip"+(++id);
+    defs.push('<clipPath id="'+cid+'"><path d="'+d+'"/></clipPath>');
+    out.push('<g clip-path="url(#'+cid+')">'); openGroups++; };
+  S.measureText=function(t){ meas.font=S.font; return meas.measureText(t); };
+  S.fillText=function(t,x,y){
+    const mm=/^([\d.]+)px\s+(.*)$/.exec(S.font);
+    const size=mm?parseFloat(mm[1]):10, fam=mm?mm[2]:CFONT;
+    meas.font=S.font;
+    const mt=meas.measureText("Mg");
+    const asc=mt.fontBoundingBoxAscent||size*0.8, desc=mt.fontBoundingBoxDescent||size*0.2;
+    let dy=0;
+    if(S.textBaseline==="top") dy=asc;
+    else if(S.textBaseline==="middle") dy=(asc-desc)/2;
+    else if(S.textBaseline==="bottom") dy=-desc;
+    const anchor=S.textAlign==="center"?"middle":(S.textAlign==="right"?"end":"start");
+    out.push('<text x="'+n(x)+'" y="'+n(y+dy)+'" transform="matrix('+
+      m.map(v=>+v.toFixed(4)).join(" ")+')" font-family="'+esc2(fam)+'" font-size="'+n(size)+
+      '" fill="'+S.fillStyle+'" text-anchor="'+anchor+'" xml:space="preserve">'+esc2(t)+'</text>');
+  };
+  S.setTransform=function(a,b,c2,dd,e,f){ m=[a,b,c2,dd,e,f]; };
+  S.clearRect=function(){};
+  S.toSVG=function(){
+    let tail=""; for(let i=0;i<openGroups;i++) tail+="</g>";
+    for(const st of stack) for(let i=0;i<st.g;i++) tail+="</g>";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+
+      '" width="'+W+'" height="'+H+'" font-family="'+esc2(CFONT)+'">'+
+      (defs.length?'<defs>'+defs.join("")+'</defs>':'')+out.join("")+tail+'</svg>';
+  };
+}
+function buildSVG(W,H,data){
+  const s=new SVGCtx(W,H);
+  render(s,W,H,data);
+  return s.toSVG();
+}
+
+/* ============================================================
+   9. Canvas plumbing — wheel zoom, box zoom, pan
+   ============================================================ */
+let geom=null,dpr=1,drag=null,pan=null;
+function resize(){
+  const r=cv.parentElement.getBoundingClientRect();
+  dpr=window.devicePixelRatio||1;
+  cv.width=Math.max(1,Math.round(r.width*dpr));
+  cv.height=Math.max(1,Math.round(r.height*dpr));
+  paint();
+}
+function paint(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cv.width/dpr,cv.height/dpr);
+  geom=render(ctx,cv.width/dpr,cv.height/dpr,null);
+  if(drag&&geom){
+    ctx.save();
+    ctx.fillStyle="rgba(0,0,0,.08)"; ctx.strokeStyle="#000"; ctx.lineWidth=1;
+    const x=Math.min(drag.x0,drag.x1), y=Math.min(drag.y0,drag.y1);
+    ctx.fillRect(x,y,Math.abs(drag.x1-drag.x0),Math.abs(drag.y1-drag.y0));
+    ctx.strokeRect(x+0.5,y+0.5,Math.abs(drag.x1-drag.x0),Math.abs(drag.y1-drag.y0));
+    ctx.restore();
+  }
+  syncFields();
+}
+function syncFields(){
+  const ids=["xmin","xmax","ymin","ymax"];
+  if(!geom){ ids.forEach(i=>{ $(i).value=""; $(i).placeholder="—"; }); return; }
+  const cur=[geom.x0,geom.x1,geom.y0,geom.y1];
+  const aut=[geom.auto.x0,geom.auto.x1,geom.auto.y0,geom.auto.y1];
+  ids.forEach(function(id,i){
+    const el=$(id);
+    if(document.activeElement===el) return;
+    el.value = zoom? String(+cur[i].toPrecision(6)) : "";
+    el.placeholder = String(+aut[i].toPrecision(5));
+  });
+}
+cv.addEventListener("wheel",function(e){
+  if(!geom) return;
+  e.preventDefault();
+  const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top, g=geom;
+  if(mx<g.px||mx>g.px+g.pw||my<g.py||my>g.py+g.ph) return;
+  const k=e.deltaY>0?1.18:1/1.18;
+  const vx=g.x0+(mx-g.px)/g.pw*(g.x1-g.x0);
+  const vy=g.y1-(my-g.py)/g.ph*(g.y1-g.y0);
+  const zx=!e.altKey, zy=!e.shiftKey;
+  zoom={ x0: zx?vx+(g.x0-vx)*k:g.x0, x1: zx?vx+(g.x1-vx)*k:g.x1,
+         y0: zy?vy+(g.y0-vy)*k:g.y0, y1: zy?vy+(g.y1-vy)*k:g.y1 };
+  paint();
+},{passive:false});
+cv.addEventListener("mousedown",function(e){
+  if(!geom) return;
+  const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  if(e.button===1||e.button===2){
+    e.preventDefault();
+    pan={mx:mx,my:my,x0:geom.x0,x1:geom.x1,y0:geom.y0,y1:geom.y1};
+    cv.style.cursor="move";
+  } else if(e.button===0){ drag={x0:mx,y0:my,x1:mx,y1:my}; }
+});
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+window.addEventListener("mousemove",function(e){
+  if(!geom) return;
+  const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top, g=geom;
+  if(pan){
+    const dx=(mx-pan.mx)/g.pw*(pan.x1-pan.x0), dy=(my-pan.my)/g.ph*(pan.y1-pan.y0);
+    zoom={x0:pan.x0-dx,x1:pan.x1-dx,y0:pan.y0+dy,y1:pan.y1+dy};
+    paint(); return;
+  }
+  if(drag){ drag.x1=mx; drag.y1=my; paint(); return; }
+  const ro=$("readout");
+  if(mx>=g.px&&mx<=g.px+g.pw&&my>=g.py&&my<=g.py+g.ph){
+    const vx=g.x0+(mx-g.px)/g.pw*(g.x1-g.x0);
+    const vy=g.y1-(my-g.py)/g.ph*(g.y1-g.y0);
+    ro.style.display="block";
+    ro.textContent=g.data.xLabel+"   "+vx.toFixed(3)+"\n"+g.data.yLabel+"   "+vy.toFixed(3);
+  } else ro.style.display="none";
+});
+window.addEventListener("mouseup",function(){
+  if(pan){ pan=null; cv.style.cursor="crosshair"; return; }
+  if(!drag||!geom){ drag=null; return; }
+  const g=geom, dx=Math.abs(drag.x1-drag.x0), dy=Math.abs(drag.y1-drag.y0);
+  if(dx>12&&dy>12){
+    const ax=Math.min(drag.x0,drag.x1), bx=Math.max(drag.x0,drag.x1);
+    const ay=Math.min(drag.y0,drag.y1), by=Math.max(drag.y0,drag.y1);
+    const X=v=>g.x0+(v-g.px)/g.pw*(g.x1-g.x0);
+    const Y=v=>g.y1-(v-g.py)/g.ph*(g.y1-g.y0);
+    zoom={x0:X(ax),x1:X(bx),y0:Y(by),y1:Y(ay)};
+  }
+  drag=null; paint();
+});
+cv.addEventListener("dblclick",function(){ zoom=null; paint(); });
+window.addEventListener("resize",resize);
+
+["xmin","xmax","ymin","ymax"].forEach(function(id){
+  $(id).addEventListener("change",function(){
+    if(!geom) return;
+    const num=(v,f)=>{ const n2=parseFloat(v); return isFinite(n2)?n2:f; };
+    const a=geom.auto;
+    const z={x0:num($("xmin").value,a.x0),x1:num($("xmax").value,a.x1),
+             y0:num($("ymin").value,a.y0),y1:num($("ymax").value,a.y1)};
+    if(z.x1<=z.x0||z.y1<=z.y0){ syncFields(); return; }
+    zoom=z; paint();
+  });
+});
+
+/* ============================================================
+   10. UI
+   ============================================================ */
+function fmt(n,d){ return (Math.round(n*Math.pow(10,d))/Math.pow(10,d))
+  .toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function dateStr(dt){ const p=n=>String(n).padStart(2,"0");
+  return dt.getUTCFullYear()+"-"+p(dt.getUTCMonth()+1)+"-"+p(dt.getUTCDate())+" "+
+         p(dt.getUTCHours())+":"+p(dt.getUTCMinutes())+":"+p(dt.getUTCSeconds()); }
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function syncTools(){
+  document.querySelectorAll("[data-preset]").forEach(b=>b.classList.toggle("on",b.dataset.preset===opt.preset));
+  document.querySelectorAll("[data-cyc]").forEach(b=>b.classList.toggle("on",b.dataset.cyc===opt.cycles));
+  document.querySelectorAll("[data-opt]").forEach(b=>b.classList.toggle("on",!!opt[b.dataset.opt]));
+  const pvp=opt.preset==="pvp";
+  $("xch").disabled=pvp; $("ych").disabled=pvp;
+}
+function refreshChannelPickers(kx,ky){
+  const list=chanList().filter(k=>k.charAt(0)!=="_");
+  const html=list.map(k=>'<option value="'+esc(k)+'">'+esc(k)+"</option>").join("")
+             +'<option value="__time">Time</option>';
+  $("xch").innerHTML=html; $("ych").innerHTML=html;
+  if(kx&&[].slice.call($("xch").options).some(o=>o.value===kx)) $("xch").value=kx;
+  if(ky&&[].slice.call($("ych").options).some(o=>o.value===ky)) $("ych").value=ky;
+}
+function applyPreset(){
+  const map={fd:["Displacement","Force"],fv:["Velocity","Force"],ft:["__time","Force"],
+             dt:["__time","Displacement"],vt:["__time","Velocity"]};
+  if(map[opt.preset]&&doc){ $("xch").value=map[opt.preset][0]; $("ych").value=map[opt.preset][1]; }
+  syncTools(); zoom=null; paint();
+}
+function buildRunList(){
+  const box=$("runs");
+  if(!doc||!doc.runs.length){ box.innerHTML='<p class="stat">No file loaded</p>'; return; }
+  box.innerHTML="";
+  for(const run of doc.runs){
+    const f=run.channels.Force;
+    let peak=0; if(f) for(const v of f.vals) if(v>peak) peak=v;
+    const nc=cycles(run).length;
+    const div=document.createElement("label");
+    div.className="runrow";
+    div.innerHTML='<input type="checkbox" '+(selected.has(run.index)?"checked":"")+'>'+
+      '<span class="sw" style="background:'+PALETTE[(run.index-1)%PALETTE.length]+'"></span>'+
+      '<span class="t"><b>'+esc("Run "+run.index+" — "+label(run))+'</b><em>'+
+      (f?"Peak "+fmt(conv(f.unit)(peak),1)+" "+targetUnit(f.unit)+" · ":"")+
+      (run.channels.Displacement||{vals:[]}).vals.length+" pts · "+
+      nc+" cycle"+(nc===1?"":"s")+"</em></span>";
+    div.querySelector("input").addEventListener("change",function(e){
+      if(e.target.checked) selected.add(run.index); else selected.delete(run.index);
+      zoom=null; paint();
+    });
+    box.appendChild(div);
+  }
+}
+function metaPairs(){
+  const i=doc.methodInfo, s=doc.session;
+  const t=s.Test_Temperature?fmt(conv(s.Test_Temperature.u)(s.Test_Temperature.v),1)+" "+targetUnit(s.Test_Temperature.u):"—";
+  const sd=s.Shaft_Diameter?fmt(conv(s.Shaft_Diameter.u)(s.Shaft_Diameter.v),2)+" "+targetUnit(s.Shaft_Diameter.u):"—";
+  return [["File",fileName],["Test run",i["Test Run"]||"—"],["Dyno",i["Dyno Serial Number"]||"—"],
+    ["Software",i["Software Version"]||"—"],["Method",i["PVPMethod"]||doc.typeName],
+    ["Date",dateStr(doc.testDate)],["Runs",String(doc.runs.length)],
+    ["Test temp",t],["Shaft dia",sd]];
+}
+function buildMeta(){
+  if(!doc){ $("foot").innerHTML=""; return; }
+  $("foot").innerHTML=metaPairs().map(p=>"<span>"+esc(p[0])+": <b>"+esc(p[1])+"</b></span>").join("");
+  $("stat").textContent=(doc.methodInfo["Dyno Serial Number"]||"")+" · "+(doc.methodInfo["Software Version"]||"");
+  $("props").innerHTML="<table class='props'>"+
+    Object.keys(doc.session).map(k=>{ const v=doc.session[k];
+      return "<tr><td>"+esc(k)+"</td><td>"+fmt(conv(v.u)(v.v),3)+" "+targetUnit(v.u)+"</td></tr>"; }).join("")+
+    Object.keys(doc.sessionInfo).filter(k=>doc.sessionInfo[k])
+      .map(k=>"<tr><td>"+esc(k)+"</td><td>"+esc(doc.sessionInfo[k])+"</td></tr>").join("")+"</table>";
+  $("propsBox").hidden=false;
+}
+function loadBuffer(buf,name){
+  try{
+    doc=parsePVP(buf); fileName=name;
+    selected=new Set(doc.runs.map(r=>r.index));
+    zoom=null;
+    refreshChannelPickers("Displacement","Force");
+    applyPreset(); buildRunList(); buildMeta();
+    $("drop").classList.add("hide");
+    $("btnSave").disabled=false;
+    $("err").classList.remove("show");
+    $("tab").classList.remove("empty");
+    $("tabName").textContent=name.replace(/\.pvp$/i,"");
+    resize();
+  }catch(e){
+    $("err").textContent=e.message; $("err").classList.add("show");
+    $("drop").classList.remove("hide");
+  }
+}
+function handleFile(f){
+  const fr=new FileReader();
+  fr.onload=function(){ loadBuffer(fr.result,f.name); };
+  fr.readAsArrayBuffer(f);
+}
+function closeFile(){
+  doc=null; fileName=""; selected=new Set(); zoom=null; geom=null;
+  $("drop").classList.remove("hide"); $("btnSave").disabled=true;
+  $("tab").classList.add("empty"); $("tabName").textContent="Untitled";
+  $("stat").textContent="No file"; $("foot").innerHTML="";
+  $("runs").innerHTML='<p class="stat">No file loaded</p>';
+  $("propsBox").hidden=true; paint();
+}
+$("btnOpen").onclick=$("btnOpen2").onclick=$("tabAdd").onclick=function(){ $("file").click(); };
+$("file").onchange=function(e){ if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=""; };
+$("tabClose").onclick=closeFile;
+$("btnReset").onclick=function(){ zoom=null; paint(); };
+$("allOn").onclick=function(){ if(!doc) return; selected=new Set(doc.runs.map(r=>r.index)); buildRunList(); zoom=null; paint(); };
+$("allOff").onclick=function(){ selected=new Set(); buildRunList(); paint(); };
+
+document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=function(){ opt.preset=b.dataset.preset; applyPreset(); });
+document.querySelectorAll("[data-cyc]").forEach(b=>b.onclick=function(){ opt.cycles=b.dataset.cyc; syncTools(); zoom=null; paint(); });
+document.querySelectorAll("[data-opt]").forEach(b=>b.onclick=function(){ opt[b.dataset.opt]=!opt[b.dataset.opt]; syncTools(); paint(); });
+["xch","ych"].forEach(id=>$(id).addEventListener("change",function(){ opt.preset="custom"; syncTools(); zoom=null; paint(); }));
+["uForce","uLen","uVel","uTemp","invVel"].forEach(id=>$(id).addEventListener("change",function(){
+  buildRunList(); buildMeta(); zoom=null; paint(); }));
+$("lw").addEventListener("input",paint);
+
+["dragenter","dragover"].forEach(ev=>window.addEventListener(ev,function(e){
+  e.preventDefault(); $("drop").classList.remove("hide"); $("drop").classList.add("over"); }));
+window.addEventListener("dragleave",function(e){
+  e.preventDefault(); $("drop").classList.remove("over");
+  if(doc) $("drop").classList.add("hide"); });
+window.addEventListener("drop",function(e){
+  e.preventDefault(); $("drop").classList.remove("over");
+  const f=e.dataTransfer.files[0];
+  if(f) handleFile(f); else if(doc) $("drop").classList.add("hide"); });
+
+/* ---------- save menu ---------- */
+$("btnSave").onclick=function(e){ e.stopPropagation(); $("saveMenu").classList.toggle("open"); };
+document.addEventListener("click",function(){ $("saveMenu").classList.remove("open"); });
+$("saveMenu").addEventListener("click",function(e){
+  const b=e.target.closest("button"); if(!b) return;
+  $("saveMenu").classList.remove("open");
+  ({png:savePNG,svg:saveSVG,html:saveHTML,csv:saveCSV})[b.dataset.fmt]();
+});
+function download(blob,name){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },5000);
+}
+function baseName(){ return fileName.replace(/\.pvp$/i,"")||"plot"; }
+
+function savePNG(){
+  const W=2400,H=1854,s=2;
+  const off=document.createElement("canvas"); off.width=W; off.height=H;
+  const c=off.getContext("2d"); c.setTransform(s,0,0,s,0,0);
+  render(c,W/s,H/s,null);
+  off.toBlob(function(b){ download(b,baseName()+"_"+opt.preset+".png"); },"image/png");
+}
+function saveSVG(){
+  const svg=buildSVG(1200,927,null);
+  download(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+svg],
+    {type:"image/svg+xml"}),baseName()+"_"+opt.preset+".svg");
+}
+function saveCSV(){
+  if(!doc) return;
+  const names=chanList(), rows=[];
+  rows.push(["Run","RunLabel","Sample","Time_sec"].concat(names.map(function(n){
+    for(const r of doc.runs){ const c=r.channels[n]; if(c) return n+" ("+targetUnit(c.unit)+")"; }
+    return n; })).join(","));
+  for(const run of doc.runs){
+    if(!selected.has(run.index)) continue;
+    const rate=(Object.values(run.channels)[0]||{rate:1}).rate||1;
+    const cs=names.map(n=>run.channels[n]);
+    const fns=cs.map(c=>c?conv(c.unit):null);
+    for(const ab of rangeFor(run,opt.cycles))
+      for(let i=ab[0];i<ab[1];i++)
+        rows.push([run.index,'"'+(run.info.RunLabel||"").replace(/"/g,'""')+'"',i,(i/rate).toFixed(6)]
+          .concat(cs.map(function(c,j){ return c?fns[j](c.vals[i]).toFixed(5):""; })).join(","));
+  }
+  download(new Blob([rows.join("\n")],{type:"text/csv"}),baseName()+".csv");
+}
+
+/* ---------- responsive minimalist HTML report ---------- */
+function saveHTML(){
+  if(!doc) return;
+  const mainTitle=(buildSeries()||{title:""}).title;
+  const main=buildSVG(1180,910,null);
+  let extra="";
+  if(doc.summary&&doc.summary.Velocity&&doc.summary.Force&&opt.preset!=="pvp"){
+    const keep=opt.preset; opt.preset="pvp";
+    extra='<figure><figcaption>Peak force vs. peak velocity</figcaption>'+buildSVG(1180,760,null)+'</figure>';
+    opt.preset=keep;
+  }
+  const stat=function(ch){ if(!ch||!ch.vals.length) return ["—","—"];
+    let lo=Infinity,hi=-Infinity;
+    for(const x of ch.vals){ if(x<lo)lo=x; if(x>hi)hi=x; }
+    const c=conv(ch.unit); return [fmt(c(lo),2),fmt(c(hi),2)]; };
+  const runRows=doc.runs.map(function(run){
+    const f=run.channels.Force, v=run.channels.Velocity, d=run.channels.Displacement, t=run.channels.Temperature;
+    const F=stat(f), V=stat(v), D=stat(d);
+    let tm="—";
+    if(t&&t.vals.length){ let s=0; for(const x of t.vals) s+=x; tm=fmt(conv(t.unit)(s/t.vals.length),1); }
+    return "<tr><td>"+run.index+"</td><td>"+esc(label(run))+"</td><td>"+(f?f.vals.length:0)+"</td><td>"+
+      cycles(run).length+"</td><td>"+D[0]+" / "+D[1]+"</td><td>"+V[0]+" / "+V[1]+"</td><td>"+
+      F[0]+" / "+F[1]+"</td><td>"+tm+"</td></tr>";
+  }).join("");
+  const u=function(k){ for(const r of doc.runs){ const c=r.channels[k]; if(c) return targetUnit(c.unit); } return ""; };
+  const propRows=Object.keys(doc.session).map(function(k){ const val=doc.session[k];
+      return "<tr><td>"+esc(k)+"</td><td>"+fmt(conv(val.u)(val.v),3)+" "+targetUnit(val.u)+"</td></tr>"; }).join("")+
+    Object.keys(doc.sessionInfo).filter(k=>doc.sessionInfo[k]).map(function(k){
+      return "<tr><td>"+esc(k)+"</td><td>"+esc(doc.sessionInfo[k])+"</td></tr>"; }).join("");
+  const now=new Date();
+  const stamp=dateStr(new Date(now.getTime()-now.getTimezoneOffset()*60000));
+
+  const html='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'+
+'<meta name="viewport" content="width=device-width, initial-scale=1">'+
+'<title>'+esc(baseName())+' — PVP report</title><style>'+
+'*{box-sizing:border-box;border-radius:0}'+
+'body{margin:0;background:#fff;color:#000;font-size:15px;line-height:1.55;'+
+'font-family:Bahnschrift,"Bahnschrift Light","DIN Alternate","Segoe UI",Roboto,Arial,sans-serif}'+
+'.wrap{max-width:1200px;margin:0 auto;padding:36px 20px 90px}'+
+'h1{margin:0;font-size:clamp(20px,4vw,30px);font-weight:700;letter-spacing:.14em;text-transform:uppercase}'+
+'h2{margin:44px 0 14px;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;'+
+'border-bottom:2px solid #000;padding-bottom:8px}'+
+'.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8a8a8a;margin-top:6px}'+
+'.rule{border-top:2px solid #000;margin-top:18px}'+
+'.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));'+
+'background:#fff;border:2px solid #000;margin-top:22px}'+
+'.cell{background:#fff;padding:11px 13px;border-right:1px solid #000;border-bottom:1px solid #000}'+
+'.k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}'+
+'.v{font-size:15px;font-weight:700;word-break:break-word}'+
+'figure{margin:0 0 24px;border:2px solid #000;padding:10px}'+
+'figure svg{width:100%;height:auto;display:block}'+
+'figcaption{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a;padding:2px 2px 10px}'+
+'.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}'+
+'table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}'+
+'th,td{border:1px solid #000;padding:7px 10px;text-align:right;white-space:nowrap}'+
+'th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}'+
+'th{background:#000;color:#fff;font-weight:700;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase}'+
+'table.kv{min-width:0}table.kv td:first-child{width:60%}'+
+'footer{margin-top:56px;padding-top:14px;border-top:2px solid #000;font-size:10px;'+
+'letter-spacing:.14em;text-transform:uppercase;color:#8a8a8a}'+
+'@media(max-width:640px){.wrap{padding:22px 12px 60px}figure{padding:6px}th,td{padding:6px 8px;font-size:12px}}'+
+'</style></head><body><div class="wrap">'+
+'<h1>'+esc(baseName())+'</h1>'+
+'<div class="sub">Roehrig shock dyno report · generated '+esc(stamp)+'</div>'+
+'<div class="rule"></div>'+
+'<div class="grid">'+metaPairs().map(function(p){
+  return '<div class="cell"><div class="k">'+esc(p[0])+'</div><div class="v">'+esc(p[1])+'</div></div>'; }).join("")+'</div>'+
+'<h2>Plots</h2>'+
+'<figure><figcaption>'+esc(mainTitle)+(opt.simplify?" · simplified":"")+
+' · '+esc(opt.cycles)+' cycles</figcaption>'+main+'</figure>'+extra+
+'<h2>Runs</h2><div class="scroll"><table><thead><tr>'+
+'<th>#</th><th>Run</th><th>Samples</th><th>Cycles</th>'+
+'<th>Disp min / max ('+esc(u("Displacement"))+')</th>'+
+'<th>Vel min / max ('+esc(u("Velocity"))+')</th>'+
+'<th>Force min / max ('+esc(u("Force"))+')</th>'+
+'<th>Temp ('+esc(u("Temperature"))+')</th></tr></thead><tbody>'+runRows+'</tbody></table></div>'+
+'<h2>Session properties</h2><div class="scroll"><table class="kv"><tbody>'+propRows+'</tbody></table></div>'+
+'<footer>PVP Viewer · '+esc(doc.methodInfo["Dyno Serial Number"]||"")+' · '+
+esc(doc.methodInfo["Software Version"]||"")+'</footer>'+
+'</div></body></html>';
+  download(new Blob([html],{type:"text/html"}),baseName()+"_report.html");
+}
+
+window.__loadPVP=loadBuffer;
+syncTools(); resize();
+</script>
+</body>
+</html>
