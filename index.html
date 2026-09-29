@@ -168,9 +168,17 @@ input[type=text]{text-transform:uppercase}
   overflow-x:auto;
   overflow-y:hidden;
   flex-shrink:0;
-  scrollbar-width:thin;
 }
-#tab-bar::-webkit-scrollbar{height:3px}
+/* 2px flat rule — no arrows, no track, no rounding.
+   NOTE: do not add `scrollbar-width` here; Chromium ignores every
+   ::-webkit-scrollbar rule on an element that sets it, which drops
+   the bar back to the chunky native Windows widget. */
+#tab-bar::-webkit-scrollbar{height:2px}
+#tab-bar::-webkit-scrollbar-track{background:transparent}
+#tab-bar::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:0}
+#tab-bar::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
+#tab-bar::-webkit-scrollbar-button{display:none;width:0;height:0}
+#tab-bar::-webkit-scrollbar-corner{background:transparent}
 .tab{
   display:flex;
   align-items:center;
@@ -1071,6 +1079,7 @@ const DEFAULT_TOOLS = [
   { id:'t_manual', name:'MANUAL CREATOR',        source:'path', path:'MANUAL_CREATOR.html' },
   { id:'t_reader', name:'READER',               source:'path', path:'READER.html' },
   { id:'t_pe',     name:'PE',                    source:'path', path:'PE.html' },
+  { id:'t_pvp',    name:'PVP VIEWER',             source:'path', path:'PVP_VIEWER.html' },
 ];
 
 const COLOR_KEYS = [
