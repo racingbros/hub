@@ -389,7 +389,8 @@
     }catch(e){ library = SEED.hd ? [normalizeBook(SEED.hd,true)] : []; }
     renderLibrary();
     updateUI();
-    showWelcome();
+    if(library.length) openBookObj(library[0],false);
+    else showWelcome();
   }
   function normalizeBook(b,saved){
     return { id:b.id||uid(), title:b.title||'Untitled', created:b.created||Date.now(),
